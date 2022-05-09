@@ -42,10 +42,10 @@ class StationRenderer(
         marker.tag = clusterItem
     }
 
-    override fun onBeforeClusterRendered(cluster: Cluster<Station>?, markerOptions: MarkerOptions?) {
+    override fun onBeforeClusterRendered(cluster: Cluster<Station>, markerOptions: MarkerOptions) {
         markerOptions?.icon(bicycleIcon)
     }
-    override fun onClusterRendered(cluster: Cluster<Station>?, marker: Marker?) {
+    override fun onClusterRendered(cluster: Cluster<Station>, marker: Marker) {
         marker?.setIcon(bicycleIcon)
     }
 }
