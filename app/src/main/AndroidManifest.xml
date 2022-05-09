@@ -3,6 +3,7 @@
     package="fr.epf.min1.velib">
 
     <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -10,7 +11,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Velib">
-
+        <activity
+            android:name=".StationAdapter"
+            android:exported="false" />
+        <activity
+            android:name=".ListStationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DetailsStationActivity"
+            android:exported="false" />
         <!--
              TODO: Before you run your application, you need a Google Maps API key.
 

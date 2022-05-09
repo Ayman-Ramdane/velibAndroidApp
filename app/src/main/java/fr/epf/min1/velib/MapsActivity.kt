@@ -1,8 +1,10 @@
 package fr.epf.min1.velib
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import androidx.core.content.ContextCompat
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -12,10 +14,9 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.ClusterManager
 import fr.epf.min1.velib.api.LocalisationStation
-import fr.epf.min1.velib.api.Station
+import fr.epf.min1.velib.api.StopPosition
 import fr.epf.min1.velib.databinding.ActivityMapsBinding
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
@@ -28,7 +29,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
 
-    private lateinit var listStations: List<Station>
+    private lateinit var listStopPositions: List<StopPosition>
 
     private val bicycleIcon: BitmapDescriptor by lazy {
         val color = ContextCompat.getColor(this, R.color.marker)
@@ -45,18 +46,33 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
-        mapFragment.getMapAsync{ googleMap ->
+        mapFragment.getMapAsync { googleMap ->
             addClusteredMarkers(googleMap)
             googleMap.setOnMapLoadedCallback {
                 val bounds = LatLngBounds.builder()
-                listStations.forEach { bounds.include(LatLng(it.lat, it.lon)) }
+                listStopPositions.forEach { bounds.include(LatLng(it.lat, it.lon)) }
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
             }
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.station_map, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val id = item.itemId
+        when (id) {
+            R.id.list_station_action -> {
+                startActivity(Intent(this, ListStationActivity::class.java))
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     private fun addClusteredMarkers(googleMap: GoogleMap) {
-        val clusterManager = ClusterManager<Station>(this, googleMap)
+        val clusterManager = ClusterManager<StopPosition>(this, googleMap)
         clusterManager.renderer =
             StationRenderer(
                 this,
@@ -65,7 +81,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             )
 
         // Add the places to the ClusterManager.
-        clusterManager.addItems(listStations)
+        clusterManager.addItems(listStopPositions)
         clusterManager.cluster()
 
         // Set ClusterManager as the OnCameraIdleListener so that it
@@ -101,7 +117,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val service = retrofit.create(LocalisationStation::class.java)
 
         runBlocking {
-            listStations = service.getStations().data.stations
+            listStopPositions = service.getStations().data.stations
             //mMap.setMinZoomPreference(12F)
             /*for (station in listStations){
                 val coordinate = LatLng(station.lat, station.lon)
