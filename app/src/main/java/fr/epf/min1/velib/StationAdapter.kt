@@ -6,10 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import fr.epf.min1.velib.api.StopPosition
-import fr.epf.min1.velib.model.Station
+import fr.epf.min1.velib.api.StationPosition
 
-class StationAdapter(val stations: List<StopPosition>) :
+class StationAdapter(val stations: List<StationPosition>) :
     RecyclerView.Adapter<StationAdapter.StationViewHolder>() {
 
     class StationViewHolder(val view: View) : RecyclerView.ViewHolder(view)

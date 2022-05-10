@@ -16,7 +16,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.clustering.ClusterManager
 import fr.epf.min1.velib.api.LocalisationStation
-import fr.epf.min1.velib.api.StopPosition
+import fr.epf.min1.velib.api.StationPosition
 import fr.epf.min1.velib.databinding.ActivityMapsBinding
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
@@ -29,7 +29,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
 
-    private lateinit var listStopPositions: List<StopPosition>
+    private lateinit var listStationPositions: List<StationPosition>
 
     private val bicycleIcon: BitmapDescriptor by lazy {
         val color = ContextCompat.getColor(this, R.color.marker)
@@ -50,7 +50,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             addClusteredMarkers(googleMap)
             googleMap.setOnMapLoadedCallback {
                 val bounds = LatLngBounds.builder()
-                listStopPositions.forEach { bounds.include(LatLng(it.lat, it.lon)) }
+                listStationPositions.forEach { bounds.include(LatLng(it.lat, it.lon)) }
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
             }
         }
@@ -72,7 +72,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun addClusteredMarkers(googleMap: GoogleMap) {
-        val clusterManager = ClusterManager<StopPosition>(this, googleMap)
+        val clusterManager = ClusterManager<StationPosition>(this, googleMap)
         clusterManager.renderer =
             StationRenderer(
                 this,
@@ -81,7 +81,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             )
 
         // Add the places to the ClusterManager.
-        clusterManager.addItems(listStopPositions)
+        clusterManager.addItems(listStationPositions)
         clusterManager.cluster()
 
         // Set ClusterManager as the OnCameraIdleListener so that it
@@ -117,7 +117,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val service = retrofit.create(LocalisationStation::class.java)
 
         runBlocking {
-            listStopPositions = service.getStations().data.stations
+            listStationPositions = service.getStations().data.stations
             //mMap.setMinZoomPreference(12F)
             /*for (station in listStations){
                 val coordinate = LatLng(station.lat, station.lon)

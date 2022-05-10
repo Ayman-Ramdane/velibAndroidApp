@@ -10,9 +10,9 @@ interface VelibStationDetails {
 
 data class GetStationDetails(val data: DataStationDetails)
 
-data class DataStationDetails(val stations: List<StopDetails>)
+data class DataStationDetails(val stations: List<StationDetails>)
 
-data class StopDetails (
+data class StationDetails (
     val station_id: Double,
     val is_installed: Double?,
     val is_renting: Double?,

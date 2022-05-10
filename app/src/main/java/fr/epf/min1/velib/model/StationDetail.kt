@@ -1,7 +1,7 @@
 package fr.epf.min1.velib.model
 
 
-data class Station(
+data class StationDetail(
     val station_id: Double,
     val is_installed: Double?,
     val is_renting: Double?,

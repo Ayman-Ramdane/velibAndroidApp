@@ -31,7 +31,7 @@
         app:layout_constraintTop_toBottomOf="@+id/textView9" />
 
     <TextView
-        android:id="@+id/details_stations_nom_textview"
+        android:id="@+id/details_stations_name_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="TextView"
@@ -39,18 +39,18 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/details_stations_velos_textview"
+        android:id="@+id/details_stations_bikes_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="TextView"
         app:layout_constraintStart_toEndOf="@+id/textView9"
-        app:layout_constraintTop_toBottomOf="@+id/details_stations_nom_textview" />
+        app:layout_constraintTop_toBottomOf="@+id/details_stations_name_textview" />
 
     <TextView
-        android:id="@+id/details_stations_bornes_textview"
+        android:id="@+id/details_stations_docks_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="TextView"
         app:layout_constraintStart_toEndOf="@+id/textView10"
-        app:layout_constraintTop_toBottomOf="@+id/details_stations_velos_textview" />
+        app:layout_constraintTop_toBottomOf="@+id/details_stations_bikes_textview" />
 </androidx.constraintlayout.widget.ConstraintLayout>

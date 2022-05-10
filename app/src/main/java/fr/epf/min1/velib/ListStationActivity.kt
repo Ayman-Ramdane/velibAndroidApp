@@ -6,9 +6,8 @@ import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import fr.epf.min1.velib.api.LocalisationStation
-import fr.epf.min1.velib.api.StopPosition
+import fr.epf.min1.velib.api.StationPosition
 import fr.epf.min1.velib.api.VelibStationDetails
-import fr.epf.min1.velib.model.Station
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -19,7 +18,7 @@ private const val TAG = "ListStationActivity"
 
 class ListStationActivity : AppCompatActivity() {
 
-    private lateinit var listStopPositions: List<StopPosition>
+    private lateinit var listStationPositions: List<StationPosition>
     private var stationAdapter: StationAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +38,7 @@ class ListStationActivity : AppCompatActivity() {
         val service = retrofit.create(LocalisationStation::class.java)
 
         runBlocking {
-            listStopPositions = service.getStations().data.stations
+            listStationPositions = service.getStations().data.stations
 /*            var listStopDetails = service.getStations().data.stations
             listStopDetails.map {
                 val (station_id, is_installed, is_renting, is_returning, numBikesAvailable, numDocksAvailable) = it
@@ -66,7 +65,7 @@ class ListStationActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
-        stationAdapter = StationAdapter(listStopPositions)
+        stationAdapter = StationAdapter(listStationPositions)
         recyclerView.adapter = stationAdapter
     }
 

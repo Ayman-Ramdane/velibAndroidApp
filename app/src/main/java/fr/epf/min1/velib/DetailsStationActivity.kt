@@ -2,10 +2,9 @@ package fr.epf.min1.velib
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.TextView
 import fr.epf.min1.velib.api.VelibStationDetails
-import fr.epf.min1.velib.model.Station
+import fr.epf.min1.velib.model.StationDetail
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -16,8 +15,8 @@ private const val TAG = "DetailsStationActivity"
 
 class DetailsStationActivity : AppCompatActivity() {
 
-    private val stations: MutableList<Station> = mutableListOf()
-    var stationDetails: Station = Station(0.0, null, null, null, null, null, )
+    private val stations: MutableList<StationDetail> = mutableListOf()
+    var stationDetails: StationDetail = StationDetail(0.0, null, null, null, null, null, )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +43,7 @@ class DetailsStationActivity : AppCompatActivity() {
             listStopDetails.map {
                 val (station_id, is_installed, is_renting, is_returning, numBikesAvailable, numDocksAvailable) = it
 
-                Station(
+                StationDetail(
                     station_id,
                     is_installed,
                     is_renting,
@@ -75,15 +74,15 @@ class DetailsStationActivity : AppCompatActivity() {
             }
         }*/
 
-        val nameTextView = findViewById<TextView>(R.id.details_stations_nom_textview)
+        val nameTextView = findViewById<TextView>(R.id.details_stations_name_textview)
         nameTextView.text = stationName
 
         val numBikes = stationDetails.numBikesAvailable
-        val numBikesTextView = findViewById<TextView>(R.id.details_stations_velos_textview)
+        val numBikesTextView = findViewById<TextView>(R.id.details_stations_bikes_textview)
         numBikesTextView.text = numBikes.toString()
 
         val numDocks = stationDetails.numDocksAvailable
-        val numDocksTextView = findViewById<TextView>(R.id.details_stations_bornes_textview)
+        val numDocksTextView = findViewById<TextView>(R.id.details_stations_docks_textview)
         numDocksTextView.text = numDocks.toString()
     }
 }

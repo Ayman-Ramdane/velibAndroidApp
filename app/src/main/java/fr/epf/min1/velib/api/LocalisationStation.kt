@@ -11,8 +11,8 @@ interface LocalisationStation {
 }
 
 data class GetStationResult(val data: DataStation)
-data class DataStation(val stations: List<StopPosition>)
-data class StopPosition(val station_id: Double, val name: String, val lat: Double, val lon: Double) :
+data class DataStation(val stations: List<StationPosition>)
+data class StationPosition(val station_id: Double, val name: String, val lat: Double, val lon: Double) :
     ClusterItem {
     override fun getPosition(): LatLng = LatLng(lat, lon)
 
