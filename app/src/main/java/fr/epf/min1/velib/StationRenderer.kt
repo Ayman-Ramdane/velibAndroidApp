@@ -10,13 +10,13 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.maps.android.clustering.Cluster
 import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.clustering.view.DefaultClusterRenderer
-import fr.epf.min1.velib.api.Station
+import fr.epf.min1.velib.api.StationPosition
 
 
 class StationRenderer(
     private val context: Context,
     map: GoogleMap,
-    clusterManager: ClusterManager<Station> ): DefaultClusterRenderer<Station>(context, map, clusterManager) {
+    clusterManager: ClusterManager<StationPosition> ): DefaultClusterRenderer<StationPosition>(context, map, clusterManager) {
 
     private val bicycleIcon: BitmapDescriptor by lazy {
         val color = ContextCompat.getColor(
@@ -31,21 +31,21 @@ class StationRenderer(
     }
 
     override fun onBeforeClusterItemRendered(
-        item: Station,
+        item: StationPosition,
         markerOptions: MarkerOptions
     ) {
         markerOptions.title(item.name)
             .position(LatLng(item.lat, item.lon))
             .icon(bicycleIcon)
     }
-    override fun onClusterItemRendered(clusterItem: Station, marker: Marker) {
+    override fun onClusterItemRendered(clusterItem: StationPosition, marker: Marker) {
         marker.tag = clusterItem
     }
 
-    override fun onBeforeClusterRendered(cluster: Cluster<Station>, markerOptions: MarkerOptions) {
+    override fun onBeforeClusterRendered(cluster: Cluster<StationPosition>, markerOptions: MarkerOptions) {
         markerOptions?.icon(bicycleIcon)
     }
-    override fun onClusterRendered(cluster: Cluster<Station>, marker: Marker) {
+    override fun onClusterRendered(cluster: Cluster<StationPosition>, marker: Marker) {
         marker?.setIcon(bicycleIcon)
     }
 }
