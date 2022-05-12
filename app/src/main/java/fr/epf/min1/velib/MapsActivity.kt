@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -14,6 +15,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.clustering.ClusterItem
 import com.google.maps.android.clustering.ClusterManager
 import fr.epf.min1.velib.api.LocalisationStation
 import fr.epf.min1.velib.api.StationPosition
@@ -28,13 +30,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
-
     private lateinit var listStationPositions: List<StationPosition>
-
-    private val bicycleIcon: BitmapDescriptor by lazy {
-        val color = ContextCompat.getColor(this, R.color.marker)
-        BitmapHelper.vectorToBitmap(this, R.drawable.ic_pedal_bike, color)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +76,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 clusterManager
             )
 
-        // Add the places to the ClusterManager.
         clusterManager.addItems(listStationPositions)
         clusterManager.cluster()
 
@@ -88,6 +83,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // can re-cluster when zooming in and out.
         googleMap.setOnCameraIdleListener {
             clusterManager.onCameraIdle()
+        }
+
+        clusterManager.setOnClusterItemClickListener {
+            val intent = Intent(this, DetailsStationActivity::class.java)
+            intent.putExtra("station_id", it.station_id)
+            intent.putExtra("station_name", it.name)
+            startActivity(intent)
+            true
         }
     }
 
@@ -118,14 +121,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         runBlocking {
             listStationPositions = service.getStations().data.stations
-            //mMap.setMinZoomPreference(12F)
-            /*for (station in listStations){
-                val coordinate = LatLng(station.lat, station.lon)
-                mMap.addMarker(MarkerOptions().position(coordinate).title(station.name).icon(bicycleIcon))
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(coordinate))
-                mMap.setMinZoomPreference(12F)
-            }*/
         }
-
     }
 }
+
+
