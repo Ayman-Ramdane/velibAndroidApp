@@ -9,15 +9,15 @@ interface VelibStationDetails {
 }
 
 data class GetStationDetails(val data: DataStationDetails)
-
 data class DataStationDetails(val stations: List<StationDetails>)
-
 data class StationDetails (
     val station_id: Double,
-    val is_installed: Double?,
-    val is_renting: Double?,
-    val is_returning: Double?,
-    val numBikesAvailable: Double?,
-    val numDocksAvailable: Double?,
-    //val num_bikes_available_types: Int?
+    val is_installed: Int?,
+    val is_renting: Int?,
+    val is_returning: Int?,
+    val numBikesAvailable: Int?,
+    val numDocksAvailable: Int?,
+    val num_bikes_available_types: List<AvaibleByType>?
 )
+
+data class AvaibleByType (val mechanical: Int?, val ebike: Int?) //pas sûr que ça soit correct
