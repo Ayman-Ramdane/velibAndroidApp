@@ -12,11 +12,11 @@ interface LocalisationStation {
 
 data class GetStationResult(val data: DataStation)
 data class DataStation(val stations: List<StationPosition>)
-data class StationPosition(val station_id: Double, val name: String, val lat: Double, val lon: Double) :
+data class StationPosition(val station_id: Double, val name: String, val lat: Double, val lon: Double, val stationCode: String) :
     ClusterItem {
     override fun getPosition(): LatLng = LatLng(lat, lon)
 
     override fun getTitle(): String = name
 
-    override fun getSnippet(): String = station_id.toString()
+    override fun getSnippet(): String = stationCode
 }

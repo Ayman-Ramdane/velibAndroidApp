@@ -1,17 +1,21 @@
 package fr.epf.min1.velib
 
 import android.content.Context
+import android.content.Intent
+import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.maps.android.clustering.Cluster
+import com.google.maps.android.clustering.ClusterItem
 import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.clustering.view.DefaultClusterRenderer
 import fr.epf.min1.velib.api.StationPosition
 
+private const val TAG = "StationRenderer"
 
 class StationRenderer(
     private val context: Context,
@@ -42,10 +46,13 @@ class StationRenderer(
         marker.tag = clusterItem
     }
 
-    override fun onBeforeClusterRendered(cluster: Cluster<StationPosition>, markerOptions: MarkerOptions) {
+    /*override fun onBeforeClusterRendered(cluster: Cluster<StationPosition>, markerOptions: MarkerOptions) {
         markerOptions?.icon(bicycleIcon)
     }
     override fun onClusterRendered(cluster: Cluster<StationPosition>, marker: Marker) {
         marker?.setIcon(bicycleIcon)
-    }
+    }*/
+
+
+
 }

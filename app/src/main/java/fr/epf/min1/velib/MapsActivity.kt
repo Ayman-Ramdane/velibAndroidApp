@@ -3,20 +3,21 @@ package fr.epf.min1.velib
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import androidx.core.content.ContextCompat
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.clustering.ClusterManager
 import fr.epf.min1.velib.api.LocalisationStation
+import fr.epf.min1.velib.api.StationDetails
 import fr.epf.min1.velib.api.StationPosition
+import fr.epf.min1.velib.api.VelibStationDetails
 import fr.epf.min1.velib.databinding.ActivityMapsBinding
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
@@ -24,17 +25,13 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
+private const val TAG = "MapsActivity"
+val stations: MutableList<StationDetails> = mutableListOf()
+lateinit var listStationPositions: List<StationPosition>
+
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
-    private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
-
-    private lateinit var listStationPositions: List<StationPosition>
-
-    private val bicycleIcon: BitmapDescriptor by lazy {
-        val color = ContextCompat.getColor(this, R.color.marker)
-        BitmapHelper.vectorToBitmap(this, R.drawable.ic_pedal_bike, color)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,9 +39,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
+
+        synchroApiStationLocalisation()
+
         mapFragment.getMapAsync(this)
         mapFragment.getMapAsync { googleMap ->
             addClusteredMarkers(googleMap)
@@ -80,29 +79,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 clusterManager
             )
 
-        // Add the places to the ClusterManager.
         clusterManager.addItems(listStationPositions)
         clusterManager.cluster()
 
-        // Set ClusterManager as the OnCameraIdleListener so that it
-        // can re-cluster when zooming in and out.
         googleMap.setOnCameraIdleListener {
             clusterManager.onCameraIdle()
         }
+
+        clusterManager.setOnClusterItemClickListener {
+            val intent = Intent(this, DetailsStationActivity::class.java)
+            intent.putExtra("station_id", it.station_id)
+            intent.putExtra("station_name", it.name)
+            startActivity(intent)
+            true
+        }
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Paris.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-    override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-
+    private fun synchroApiStationLocalisation() {
         val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
@@ -118,14 +111,56 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         runBlocking {
             listStationPositions = service.getStations().data.stations
-            //mMap.setMinZoomPreference(12F)
-            /*for (station in listStations){
-                val coordinate = LatLng(station.lat, station.lon)
-                mMap.addMarker(MarkerOptions().position(coordinate).title(station.name).icon(bicycleIcon))
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(coordinate))
-                mMap.setMinZoomPreference(12F)
-            }*/
+        }
+    }
+
+    private fun synchroApiStationDetails() {
+        val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
         }
 
+        val station = OkHttpClient.Builder()
+            .addInterceptor(httpLoggingInterceptor)
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://velib-metropole-opendata.smoove.pro/opendata/Velib_Metropole/")
+            .addConverterFactory(MoshiConverterFactory.create())
+            .client(station)
+            .build()
+
+        val service = retrofit.create(VelibStationDetails::class.java)
+
+        runBlocking {
+            val result = service.getStations()
+            val results = result.data.stations
+            results.map {
+                val (station_id, is_installed, is_renting, is_returning, numBikesAvailable, numDocksAvailable, num_bikes_available_types) = it
+                StationDetails(
+                    station_id,
+                    is_installed,
+                    is_renting,
+                    is_returning,
+                    numBikesAvailable,
+                    numDocksAvailable,
+                    num_bikes_available_types
+                )
+            }
+                .map {
+                    stations.add(it)
+                    Log.d(TAG, "SynchroApi: $it")
+                }
+        }
+    }
+
+    /**
+     * Manipulates the map once available.
+     * This callback is triggered when the map is ready to be used.
+     * This is where we can add markers or lines, add listeners or move the camera.
+     */
+    override fun onMapReady(googleMap: GoogleMap) {
+        synchroApiStationDetails()
     }
 }
+
+
