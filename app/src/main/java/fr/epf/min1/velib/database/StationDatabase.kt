@@ -9,14 +9,14 @@ import fr.epf.min1.velib.model.Station
 
 
 @Database(entities = [Station::class], version = 2)
-abstract class AppDatabase : RoomDatabase() {
+abstract class StationDatabase : RoomDatabase() {
     abstract fun stationDao(): StationDAO
 
     companion object {
-        fun createDatabase(context: Context): AppDatabase {
+        fun createDatabase(context: Context): StationDatabase {
             return Room.databaseBuilder(
                 context,
-                AppDatabase::class.java,
+                StationDatabase::class.java,
                 "Station"
             )
                 .fallbackToDestructiveMigration()

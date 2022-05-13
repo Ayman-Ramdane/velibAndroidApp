@@ -23,7 +23,7 @@ import fr.epf.min1.velib.api.LocalisationStation
 import fr.epf.min1.velib.api.StationDetails
 import fr.epf.min1.velib.api.StationPosition
 import fr.epf.min1.velib.api.VelibStationDetails
-import fr.epf.min1.velib.database.AppDatabase
+import fr.epf.min1.velib.database.StationDatabase
 import fr.epf.min1.velib.databinding.ActivityMapsBinding
 import fr.epf.min1.velib.model.Station
 import kotlinx.coroutines.runBlocking
@@ -179,7 +179,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         val db = Room.databaseBuilder(
             applicationContext,
-            AppDatabase::class.java, "Station"
+            StationDatabase::class.java, "Station"
         )
             .fallbackToDestructiveMigration()
             .build()
