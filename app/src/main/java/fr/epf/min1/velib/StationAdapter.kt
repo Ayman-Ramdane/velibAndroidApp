@@ -7,8 +7,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import fr.epf.min1.velib.api.StationPosition
+import fr.epf.min1.velib.model.Station
 
-class StationAdapter(val stations: List<StationPosition>) :
+class StationAdapter(private val stations: List<Station>) :
     RecyclerView.Adapter<StationAdapter.StationViewHolder>() {
 
     class StationViewHolder(val view: View) : RecyclerView.ViewHolder(view)

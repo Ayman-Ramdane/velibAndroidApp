@@ -14,13 +14,14 @@ import com.google.maps.android.clustering.ClusterItem
 import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.clustering.view.DefaultClusterRenderer
 import fr.epf.min1.velib.api.StationPosition
+import fr.epf.min1.velib.model.Station
 
 private const val TAG = "StationRenderer"
 
 class StationRenderer(
     private val context: Context,
     map: GoogleMap,
-    clusterManager: ClusterManager<StationPosition> ): DefaultClusterRenderer<StationPosition>(context, map, clusterManager) {
+    clusterManager: ClusterManager<Station> ): DefaultClusterRenderer<Station>(context, map, clusterManager) {
 
     private val bicycleIcon: BitmapDescriptor by lazy {
         val color = ContextCompat.getColor(
@@ -35,14 +36,14 @@ class StationRenderer(
     }
 
     override fun onBeforeClusterItemRendered(
-        item: StationPosition,
+        item: Station,
         markerOptions: MarkerOptions
     ) {
         markerOptions.title(item.name)
             .position(LatLng(item.lat, item.lon))
             .icon(bicycleIcon)
     }
-    override fun onClusterItemRendered(clusterItem: StationPosition, marker: Marker) {
+    override fun onClusterItemRendered(clusterItem: Station, marker: Marker) {
         marker.tag = clusterItem
     }
 

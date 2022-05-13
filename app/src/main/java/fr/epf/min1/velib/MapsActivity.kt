@@ -1,11 +1,16 @@
 package fr.epf.min1.velib
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import androidx.room.Room
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -18,7 +23,9 @@ import fr.epf.min1.velib.api.LocalisationStation
 import fr.epf.min1.velib.api.StationDetails
 import fr.epf.min1.velib.api.StationPosition
 import fr.epf.min1.velib.api.VelibStationDetails
+import fr.epf.min1.velib.database.AppDatabase
 import fr.epf.min1.velib.databinding.ActivityMapsBinding
+import fr.epf.min1.velib.model.Station
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -26,8 +33,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 private const val TAG = "MapsActivity"
-val stations: MutableList<StationDetails> = mutableListOf()
 lateinit var listStationPositions: List<StationPosition>
+lateinit var listStationDetails: List<StationDetails>
+lateinit var listStations: List<Station>
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -42,14 +51,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
 
-        synchroApiStationLocalisation()
+        //synchroApiStationLocalisation()
 
         mapFragment.getMapAsync(this)
         mapFragment.getMapAsync { googleMap ->
             addClusteredMarkers(googleMap)
             googleMap.setOnMapLoadedCallback {
                 val bounds = LatLngBounds.builder()
-                listStationPositions.forEach { bounds.include(LatLng(it.lat, it.lon)) }
+                listStations.forEach { bounds.include(LatLng(it.lat, it.lon)) }
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
             }
         }
@@ -61,8 +70,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val id = item.itemId
-        when (id) {
+        when (item.itemId) {
             R.id.list_station_action -> {
                 startActivity(Intent(this, ListStationActivity::class.java))
             }
@@ -71,7 +79,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun addClusteredMarkers(googleMap: GoogleMap) {
-        val clusterManager = ClusterManager<StationPosition>(this, googleMap)
+        val clusterManager = ClusterManager<Station>(this, googleMap)
         clusterManager.renderer =
             StationRenderer(
                 this,
@@ -79,7 +87,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 clusterManager
             )
 
-        clusterManager.addItems(listStationPositions)
+        clusterManager.addItems(listStations)
         clusterManager.cluster()
 
         googleMap.setOnCameraIdleListener {
@@ -119,37 +127,47 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
-        val station = OkHttpClient.Builder()
+        val client = OkHttpClient.Builder()
             .addInterceptor(httpLoggingInterceptor)
             .build()
 
         val retrofit = Retrofit.Builder()
             .baseUrl("https://velib-metropole-opendata.smoove.pro/opendata/Velib_Metropole/")
             .addConverterFactory(MoshiConverterFactory.create())
-            .client(station)
+            .client(client)
             .build()
 
         val service = retrofit.create(VelibStationDetails::class.java)
 
         runBlocking {
             val result = service.getStations()
-            val results = result.data.stations
-            results.map {
-                val (station_id, is_installed, is_renting, is_returning, numBikesAvailable, numDocksAvailable, num_bikes_available_types) = it
-                StationDetails(
-                    station_id,
-                    is_installed,
-                    is_renting,
-                    is_returning,
-                    numBikesAvailable,
-                    numDocksAvailable,
-                    num_bikes_available_types
-                )
+            listStationDetails = result.data.stations
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun checkForInternet(context: Context): Boolean {
+
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            val network = connectivityManager.activeNetwork ?: return false
+
+            val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+            return when {
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                else -> false
             }
-                .map {
-                    stations.add(it)
-                    Log.d(TAG, "SynchroApi: $it")
-                }
+        } else {
+            @Suppress("DEPRECATION") val networkInfo =
+                connectivityManager.activeNetworkInfo ?: return false
+            @Suppress("DEPRECATION")
+            return networkInfo.isConnected
         }
     }
 
@@ -159,7 +177,51 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      * This is where we can add markers or lines, add listeners or move the camera.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-        synchroApiStationDetails()
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "Station"
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+
+        val stationDao = db.stationDao()
+
+        if (checkForInternet(this)) {
+            synchroApiStationLocalisation()
+            synchroApiStationDetails()
+
+            runBlocking {
+                stationDao.deleteAll()
+            }
+
+            listStationPositions.zip(listStationDetails).map {
+                Station(
+                    it.first.station_id,
+                    it.first.name,
+                    it.first.lat,
+                    it.first.lon,
+                    it.first.stationCode,
+                    it.second.is_installed,
+                    it.second.is_renting,
+                    it.second.is_returning,
+                    it.second.numBikesAvailable,
+                    it.second.numDocksAvailable
+                )
+            }.map {
+                runBlocking {
+                    stationDao.insert(it)
+                }
+            }
+
+            runBlocking {
+                listStations = stationDao.getAll()
+            }
+        } else {
+            runBlocking {
+                listStations = stationDao.getAll()
+            }
+        }
+        db.close()
     }
 }
 
