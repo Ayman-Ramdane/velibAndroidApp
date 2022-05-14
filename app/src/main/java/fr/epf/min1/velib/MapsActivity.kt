@@ -1,11 +1,21 @@
 package fr.epf.min1.velib
 
-import android.content.Intent
+import android.Manifest
+import android.content.*
+import android.content.pm.PackageManager
+import android.location.Location
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.IBinder
+import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Button
+import android.widget.TextView
+import androidx.core.app.ActivityCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -13,12 +23,18 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.snackbar.Snackbar
 import com.google.maps.android.clustering.ClusterManager
 import fr.epf.min1.velib.api.LocalisationStation
 import fr.epf.min1.velib.api.StationDetails
 import fr.epf.min1.velib.api.StationPosition
 import fr.epf.min1.velib.api.VelibStationDetails
 import fr.epf.min1.velib.databinding.ActivityMapsBinding
+import fr.epf.min1.velib.maps.ForegroundOnlyLocationService
+import fr.epf.min1.velib.maps.SharedPreferenceUtil
+import fr.epf.min1.velib.maps.toText
+import fr.epf.min1.velib.model.LocationUser
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -29,9 +45,43 @@ private const val TAG = "MapsActivity"
 val stations: MutableList<StationDetails> = mutableListOf()
 lateinit var listStationPositions: List<StationPosition>
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+//Location User
+private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
+private lateinit var map: GoogleMap
+
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.OnSharedPreferenceChangeListener {
 
     private lateinit var binding: ActivityMapsBinding
+
+    //Location User
+    private var foregroundOnlyLocationServiceBound = false
+    private var foregroundOnlyLocationService: ForegroundOnlyLocationService? = null
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var foregroundOnlyLocationButton: Button
+    //private lateinit var outputTextView: TextView
+
+
+
+    private val foregroundOnlyServiceConnection = object : ServiceConnection {
+
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            val binder = service as ForegroundOnlyLocationService.LocalBinder
+            foregroundOnlyLocationService = binder.service
+            foregroundOnlyLocationServiceBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            foregroundOnlyLocationService = null
+            foregroundOnlyLocationServiceBound = false
+        }
+    }
+    //Location User End
+
+
+
+
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +102,49 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 listStationPositions.forEach { bounds.include(LatLng(it.lat, it.lon)) }
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
             }
+            map = googleMap
+        }
+
+
+
+        //Location User
+        sharedPreferences =
+            getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+
+        foregroundOnlyLocationButton = findViewById(R.id.button_location_user)
+        //outputTextView = findViewById(R.id.output_text_view)
+
+        foregroundOnlyLocationButton.setOnClickListener {
+            //val enabled = sharedPreferences.getBoolean(SharedPreferenceUtil.KEY_FOREGROUND_ENABLED, false)
+            val locationTrackingPref = SharedPreferenceUtil.getLocationTrackingPref(this)
+
+            /*if (enabled) {
+                foregroundOnlyLocationService?.unsubscribeToLocationUpdates()
+            } else {
+                if (foregroundPermissionApproved()) {
+                    foregroundOnlyLocationService?.subscribeToLocationUpdates()
+                        ?: Log.d(TAG, "Service Not Bound")
+                } else {
+                    requestForegroundPermissions()
+                }
+            }*/
+            /*if (enabled) {
+                requestForegroundPermissions()
+            }
+            else {
+                foregroundOnlyLocationService?.subscribeToLocationUpdates()
+                    ?: Log.d(TAG, "Service Not Bound")
+
+                val location = intent.getParcelableExtra<Location>(
+                    ForegroundOnlyLocationService.EXTRA_LOCATION
+                )
+                Log.d(TAG, "onLocationResultMap: ${location?.latitude} ${location?.longitude}")
+            }*/
+            if(locationTrackingPref) {
+                foregroundOnlyLocationService?.subscribeToLocationUpdates()
+                    ?: Log.d(TAG, "Service Not Bound")
+            }
+            else {requestForegroundPermissions()}
         }
     }
 
@@ -160,6 +253,156 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      */
     override fun onMapReady(googleMap: GoogleMap) {
         synchroApiStationDetails()
+        map = googleMap
+
+    }
+
+
+
+
+
+
+    //User Location
+    override fun onStart() {
+        super.onStart()
+
+        /*updateButtonState(
+            sharedPreferences.getBoolean(SharedPreferenceUtil.KEY_FOREGROUND_ENABLED, false)
+        )*/
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+
+        val serviceIntent = Intent(this, ForegroundOnlyLocationService::class.java)
+        bindService(serviceIntent, foregroundOnlyServiceConnection, Context.BIND_AUTO_CREATE)
+
+    }
+
+    /*override fun onResume() {
+        super.onResume()
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            foregroundOnlyBroadcastReceiver,
+            IntentFilter(
+                ForegroundOnlyLocationService.ACTION_FOREGROUND_ONLY_LOCATION_BROADCAST)
+        )
+    }*/
+
+    /*override fun onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(
+            foregroundOnlyBroadcastReceiver
+        )
+        super.onPause()
+    }*/
+
+    override fun onStop() {
+        if (foregroundOnlyLocationServiceBound) {
+            unbindService(foregroundOnlyServiceConnection)
+            foregroundOnlyLocationServiceBound = false
+        }
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+
+        super.onStop()
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        /*if (key == SharedPreferenceUtil.KEY_FOREGROUND_ENABLED) {
+            updateButtonState(sharedPreferences.getBoolean(
+                SharedPreferenceUtil.KEY_FOREGROUND_ENABLED, false)
+            )
+        }*/
+    }
+
+    private fun foregroundPermissionApproved(): Boolean {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
+
+    private fun requestForegroundPermissions() {
+        val provideRationale = foregroundPermissionApproved()
+
+        if (provideRationale) {
+            Snackbar.make(
+                findViewById(R.id.activity_maps),
+                R.string.permission_rationale,
+                Snackbar.LENGTH_LONG
+            )
+                .setAction(R.string.ok) {
+                    // Request permission
+                    ActivityCompat.requestPermissions(
+                        this@MapsActivity,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
+                    )
+                }
+                .show()
+        } else {
+            Log.d(TAG, "Request foreground only permission")
+            ActivityCompat.requestPermissions(
+                this@MapsActivity,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
+            )
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        Log.d(TAG, "onRequestPermissionResult")
+
+        when (requestCode) {
+            REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE -> when {
+                grantResults.isEmpty() ->
+                    Log.d(TAG, "User interaction was cancelled.")
+                grantResults[0] == PackageManager.PERMISSION_GRANTED ->
+                    foregroundOnlyLocationService?.subscribeToLocationUpdates()
+                else -> {
+                    // Permission denied.
+                    //updateButtonState(false)
+
+                    Snackbar.make(
+                        findViewById(R.id.activity_maps),
+                        R.string.permission_denied_explanation,
+                        Snackbar.LENGTH_LONG
+                    )
+                        .setAction(R.string.settings) {
+                            val intent = Intent()
+                            intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                            val uri = Uri.fromParts(
+                                "package",
+                                BuildConfig.APPLICATION_ID,
+                                null
+                            )
+                            intent.data = uri
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            startActivity(intent)
+                        }
+                        .show()
+                }
+            }
+        }
+    }
+
+    /*private fun updateButtonState(trackingLocation: Boolean) {
+        if (trackingLocation) {
+            foregroundOnlyLocationButton.text = getString(R.string.stop_location_updates_button_text)
+        } else {
+            foregroundOnlyLocationButton.text = getString(R.string.start_location_updates_button_text)
+        }
+
+        //visible que si permision autorisée
+        //click sur boutton cherche actualise localisation et caméra se met dessus
+    }*/
+
+}
+fun locationUserOnMap(lat: Double, lon: Double) {
+    if(lat != 0.0 && lon != 0.0) {
+        val coordinate = LatLng(lat, lon)
+        map.addMarker(MarkerOptions().position(coordinate))
+        map.moveCamera(CameraUpdateFactory.newLatLng(coordinate))
     }
 }
 
