@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import fr.epf.min1.velib.api.StationPosition
 import fr.epf.min1.velib.model.Station
 
 class StationAdapter(private val stations: List<Station>) :
@@ -32,7 +31,7 @@ class StationAdapter(private val stations: List<Station>) :
         }
 
         val clientTextView = holder.view.findViewById<TextView>(R.id.adapter_station_text)
-        clientTextView.text = "${station.name}"
+        clientTextView.text = station.name
     }
 
     override fun getItemCount() = stations.size

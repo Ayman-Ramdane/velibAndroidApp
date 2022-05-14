@@ -2,4 +2,5 @@
     <string name="app_name">Velib</string>
     <string name="title_activity_maps">MapsActivity</string>
     <string name="favoris">Favoris</string>
+    <string name="stations">Stations</string>
 </resources>

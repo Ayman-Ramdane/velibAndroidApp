@@ -34,8 +34,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 private const val TAG = "MapsActivity"
-lateinit var listStationPositions: List<StationPosition>
-lateinit var listStationDetails: List<StationDetails>
+private lateinit var listStationPositions: List<StationPosition>
+private lateinit var listStationDetails: List<StationDetails>
 lateinit var listStations: List<Station>
 lateinit var listFavorite: List<Favorite>
 
@@ -71,8 +71,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.list_station_action -> {
+            R.id.map_station_list_action -> {
                 startActivity(Intent(this, ListStationActivity::class.java))
+            }
+
+            R.id.map_favorite_list_action -> {
+                startActivity(Intent(this, ListFavoriteActivity::class.java))
             }
         }
         return super.onOptionsItemSelected(item)
