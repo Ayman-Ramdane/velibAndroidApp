@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import androidx.room.Room
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -23,8 +22,10 @@ import fr.epf.min1.velib.api.LocalisationStation
 import fr.epf.min1.velib.api.StationDetails
 import fr.epf.min1.velib.api.StationPosition
 import fr.epf.min1.velib.api.VelibStationDetails
+import fr.epf.min1.velib.database.FavoriteDatabase
 import fr.epf.min1.velib.database.StationDatabase
 import fr.epf.min1.velib.databinding.ActivityMapsBinding
+import fr.epf.min1.velib.model.Favorite
 import fr.epf.min1.velib.model.Station
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
@@ -36,6 +37,7 @@ private const val TAG = "MapsActivity"
 lateinit var listStationPositions: List<StationPosition>
 lateinit var listStationDetails: List<StationDetails>
 lateinit var listStations: List<Station>
+lateinit var listFavorite: List<Favorite>
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -50,8 +52,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
-
-        //synchroApiStationLocalisation()
 
         mapFragment.getMapAsync(this)
         mapFragment.getMapAsync { googleMap ->
@@ -177,14 +177,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      * This is where we can add markers or lines, add listeners or move the camera.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-        val db = Room.databaseBuilder(
-            applicationContext,
-            StationDatabase::class.java, "Station"
-        )
-            .fallbackToDestructiveMigration()
-            .build()
+        val dbStation = StationDatabase.createDatabase(this)
 
-        val stationDao = db.stationDao()
+        val stationDao = dbStation.stationDao()
 
         if (checkForInternet(this)) {
             synchroApiStationLocalisation()
@@ -221,7 +216,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 listStations = stationDao.getAll()
             }
         }
-        db.close()
+        dbStation.close()
+
+        val dbFavorite = FavoriteDatabase.createDatabase(this)
+
+        val favoriteDao = dbFavorite.favoriteDao()
+
+        runBlocking {
+            listFavorite = favoriteDao.getAll()
+        }
+
+        dbFavorite.close()
     }
 }
 
