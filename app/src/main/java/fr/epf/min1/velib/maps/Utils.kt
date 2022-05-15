@@ -5,13 +5,6 @@ import android.location.Location
 import androidx.core.content.edit
 import fr.epf.min1.velib.R
 
-fun Location?.toText(): String {
-    return if (this != null) {
-        "($latitude, $longitude)"
-    } else {
-        "Unknown location"
-    }
-}
 
 /**
  * Provides access to SharedPreferences for location to Activities and Services.

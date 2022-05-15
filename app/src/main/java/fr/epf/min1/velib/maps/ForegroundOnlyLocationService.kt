@@ -25,8 +25,6 @@ import fr.epf.min1.velib.locationUserOnMap
 import fr.epf.min1.velib.model.LocationUser
 import java.util.concurrent.TimeUnit
 
-var locationUserLat: Double = 0.0
-var locationUserLon: Double = 0.0
 
 class ForegroundOnlyLocationService : Service(){
 
@@ -38,14 +36,15 @@ class ForegroundOnlyLocationService : Service(){
     private lateinit var locationCallback: LocationCallback
     private var currentLocation: Location? = null
 
+    @SuppressLint("MissingPermission")
     override fun onCreate() {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         locationRequest = LocationRequest.create().apply {
-            interval = TimeUnit.SECONDS.toMillis(60)
-            fastestInterval = TimeUnit.SECONDS.toMillis(30)
-            maxWaitTime = TimeUnit.MINUTES.toMillis(2)
+            interval = TimeUnit.SECONDS.toMillis(5)
+            fastestInterval = TimeUnit.SECONDS.toMillis(7)
+            maxWaitTime = TimeUnit.SECONDS.toMillis(10)
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
 
@@ -56,16 +55,16 @@ class ForegroundOnlyLocationService : Service(){
                 var lon = currentLocation!!.longitude
                 var lat = currentLocation!!.latitude
 
-                locationUserLat = lat
-                locationUserLon = lon
-                Log.d(TAG, "onLocationResult: ${lon} ${lat}")
-                locationUserOnMap(lat, lon)
-                
-                val intent = Intent(ACTION_FOREGROUND_ONLY_LOCATION_BROADCAST)
-                intent.putExtra(EXTRA_LOCATION, currentLocation)
-                LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
+                val locationUserNew = LocationUser(lat, lon)
+                locationUserOnMap(locationUserNew)
             }
         }
+
+        if(fr.epf.min1.velib.permissionApproved) {
+            fusedLocationProviderClient.requestLocationUpdates(
+                locationRequest, locationCallback, Looper.getMainLooper())
+        }
+
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -127,11 +126,10 @@ class ForegroundOnlyLocationService : Service(){
         }
     }
 
-    fun unsubscribeToLocationUpdates() {
+    private fun unsubscribeToLocationUpdates() {
         Log.d(TAG, "unsubscribeToLocationUpdates()")
 
         try {
-            // TODO: Step 1.6, Unsubscribe to location changes.
             val removeTask = fusedLocationProviderClient.removeLocationUpdates(locationCallback)
             removeTask.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -157,11 +155,6 @@ class ForegroundOnlyLocationService : Service(){
         private const val TAG = "ForegrndOnlyLocService"
 
         private const val PACKAGE_NAME = "fr.epf.min1.velib.maps"
-
-        internal const val ACTION_FOREGROUND_ONLY_LOCATION_BROADCAST =
-            "$PACKAGE_NAME.action.FOREGROUND_ONLY_LOCATION_BROADCAST"
-
-        internal const val EXTRA_LOCATION = "$PACKAGE_NAME.extra.LOCATION"
 
         private const val EXTRA_CANCEL_LOCATION_TRACKING_FROM_NOTIFICATION =
             "$PACKAGE_NAME.extra.CANCEL_LOCATION_TRACKING_FROM_NOTIFICATION"
