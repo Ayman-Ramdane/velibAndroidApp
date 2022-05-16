@@ -3,11 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".ListStationActivity">
+    tools:context=".ListFavoriteActivity">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/list_stations_recyclerview"
+        android:id="@+id/list_favorite_recyclerview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
