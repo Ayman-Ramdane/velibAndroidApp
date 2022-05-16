@@ -4,11 +4,17 @@ import android.Manifest
 import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
@@ -28,9 +34,14 @@ import fr.epf.min1.velib.api.LocalisationStation
 import fr.epf.min1.velib.api.StationDetails
 import fr.epf.min1.velib.api.StationPosition
 import fr.epf.min1.velib.api.VelibStationDetails
+import fr.epf.min1.velib.database.FavoriteDatabase
+import fr.epf.min1.velib.database.StationDatabase
 import fr.epf.min1.velib.databinding.ActivityMapsBinding
 import fr.epf.min1.velib.maps.*
 import fr.epf.min1.velib.model.LocationUser
+import fr.epf.min1.velib.model.Favorite
+import fr.epf.min1.velib.model.Station
+
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -38,8 +49,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 private const val TAG = "MapsActivity"
-val stations: MutableList<StationDetails> = mutableListOf()
-lateinit var listStationPositions: List<StationPosition>
+private lateinit var listStationPositions: List<StationPosition>
+private lateinit var listStationDetails: List<StationDetails>
+lateinit var listStations: List<Station>
+lateinit var listFavorite: List<Favorite>
+
 
 //Location User
 private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
@@ -84,14 +98,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
 
-        synchroApiStationLocalisation()
-
         mapFragment.getMapAsync(this)
         mapFragment.getMapAsync { googleMap ->
             addClusteredMarkers(googleMap)
             googleMap.setOnMapLoadedCallback {
                 val bounds = LatLngBounds.builder()
-                listStationPositions.forEach { bounds.include(LatLng(it.lat, it.lon)) }
+                listStations.forEach { bounds.include(LatLng(it.lat, it.lon)) }
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
             }
             map = googleMap
@@ -107,17 +119,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val id = item.itemId
-        when (id) {
-            R.id.list_station_action -> {
+        when (item.itemId) {
+            R.id.map_station_list_action -> {
                 startActivity(Intent(this, ListStationActivity::class.java))
+            }
+
+            R.id.map_favorite_list_action -> {
+                startActivity(Intent(this, ListFavoriteActivity::class.java))
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
     private fun addClusteredMarkers(googleMap: GoogleMap) {
-        val clusterManager = ClusterManager<StationPosition>(this, googleMap)
+        val clusterManager = ClusterManager<Station>(this, googleMap)
         clusterManager.renderer =
             StationRenderer(
                 this,
@@ -125,7 +140,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
                 clusterManager
             )
 
-        clusterManager.addItems(listStationPositions)
+        clusterManager.addItems(listStations)
         clusterManager.cluster()
 
         googleMap.setOnCameraIdleListener {
@@ -165,65 +180,50 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             level = HttpLoggingInterceptor.Level.BODY
         }
 
-        val station = OkHttpClient.Builder()
+        val client = OkHttpClient.Builder()
             .addInterceptor(httpLoggingInterceptor)
             .build()
 
         val retrofit = Retrofit.Builder()
             .baseUrl("https://velib-metropole-opendata.smoove.pro/opendata/Velib_Metropole/")
             .addConverterFactory(MoshiConverterFactory.create())
-            .client(station)
+            .client(client)
             .build()
 
         val service = retrofit.create(VelibStationDetails::class.java)
 
         runBlocking {
             val result = service.getStations()
-            val results = result.data.stations
-            results.map {
-                val (station_id, is_installed, is_renting, is_returning, numBikesAvailable, numDocksAvailable, num_bikes_available_types) = it
-                StationDetails(
-                    station_id,
-                    is_installed,
-                    is_renting,
-                    is_returning,
-                    numBikesAvailable,
-                    numDocksAvailable,
-                    num_bikes_available_types
-                )
-            }
-                .map {
-                    stations.add(it)
-                    Log.d(TAG, "SynchroApi: $it")
-                }
+            listStationDetails = result.data.stations
         }
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera.
-     */
-    override fun onMapReady(googleMap: GoogleMap) {
-        synchroApiStationDetails()
+    @SuppressLint("MissingPermission")
+    private fun checkForInternet(context: Context): Boolean {
 
-        //Location User
-        map = googleMap
-        permissionApproved = locationPermissionApproved()
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-        locationButton.setOnClickListener {
-            if(locationPermissionApproved()) {
-                foregroundOnlyLocationService?.subscribeToLocationUpdates()
-                    ?: Log.d(TAG, "Service Not Bound")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            val network = connectivityManager.activeNetwork ?: return false
+
+            val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+            return when {
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+
+                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                else -> false
             }
-            else {requestLocationPermissions()}
-
-            if(locationUserNew.latitude != 0.0 && locationUserNew.longitude != 0.0) {
-                map.moveCamera(CameraUpdateFactory.newLatLng(LatLng(locationUserNew.latitude, locationUserNew.longitude)))
-            }
+        } else {
+            @Suppress("DEPRECATION") val networkInfo =
+                connectivityManager.activeNetworkInfo ?: return false
+            @Suppress("DEPRECATION")
+            return networkInfo.isConnected
         }
     }
-
+    
     override fun onStart() {
         super.onStart()
 
@@ -321,6 +321,82 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         }
     }
 
+    /**
+     * Manipulates the map once available.
+     * This callback is triggered when the map is ready to be used.
+     * This is where we can add markers or lines, add listeners or move the camera.
+     */
+    override fun onMapReady(googleMap: GoogleMap) {
+
+        synchroApiStationDetails()
+
+        //Location User
+        map = googleMap
+        permissionApproved = locationPermissionApproved()
+
+        locationButton.setOnClickListener {
+            if(locationPermissionApproved()) {
+                foregroundOnlyLocationService?.subscribeToLocationUpdates()
+                    ?: Log.d(TAG, "Service Not Bound")
+            }
+            else {requestLocationPermissions()}
+
+            if(locationUserNew.latitude != 0.0 && locationUserNew.longitude != 0.0) {
+                map.moveCamera(CameraUpdateFactory.newLatLng(LatLng(locationUserNew.latitude, locationUserNew.longitude)))
+            }
+        }
+        
+        val dbStation = StationDatabase.createDatabase(this)
+
+        val stationDao = dbStation.stationDao()
+
+        if (checkForInternet(this)) {
+            synchroApiStationLocalisation()
+            synchroApiStationDetails()
+
+            runBlocking {
+                stationDao.deleteAll()
+            }
+
+            listStationPositions.zip(listStationDetails).map {
+                Station(
+                    it.first.station_id,
+                    it.first.name,
+                    it.first.lat,
+                    it.first.lon,
+                    it.first.stationCode,
+                    it.second.is_installed,
+                    it.second.is_renting,
+                    it.second.is_returning,
+                    it.second.numBikesAvailable,
+                    it.second.numDocksAvailable
+                )
+            }.map {
+                runBlocking {
+                    stationDao.insert(it)
+                }
+            }
+
+            runBlocking {
+                listStations = stationDao.getAll()
+            }
+        } else {
+            runBlocking {
+                listStations = stationDao.getAll()
+            }
+        }
+        dbStation.close()
+
+        val dbFavorite = FavoriteDatabase.createDatabase(this)
+
+        val favoriteDao = dbFavorite.favoriteDao()
+
+        runBlocking {
+            listFavorite = favoriteDao.getAll()
+        }
+
+        dbFavorite.close()
+    }
 }
 
 fun locationUserOnMap(locationUser: LocationUser) {
@@ -339,7 +415,6 @@ fun locationUserOnMap(locationUser: LocationUser) {
         markerLocationUser = map.addMarker(MarkerOptions().position(coordinateNew))!!
 
         locationUserLast = locationUser
+
     }
 }
-
-

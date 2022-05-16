@@ -18,11 +18,12 @@ private const val TAG = "ListStationActivity"
 
 class ListStationActivity : AppCompatActivity() {
 
-    private lateinit var listStationPositions: List<StationPosition>
     private var stationAdapter: StationAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val listStations = listStations
 
         setContentView(R.layout.activity_list_station)
 
@@ -30,8 +31,7 @@ class ListStationActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
-        listStationPositions = fr.epf.min1.velib.listStationPositions
-        stationAdapter = StationAdapter(listStationPositions)
+        stationAdapter = StationAdapter(listStations)
         recyclerView.adapter = stationAdapter
     }
 }
