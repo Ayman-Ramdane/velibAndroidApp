@@ -140,6 +140,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
                 clusterManager
             )
 
+        Log.d(TAG, "addClusteredMarkers: $listStations")
         clusterManager.addItems(listStations)
         clusterManager.cluster()
 
@@ -328,7 +329,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
      */
     override fun onMapReady(googleMap: GoogleMap) {
 
-        synchroApiStationDetails()
+        //synchroApiStationDetails()
 
         //Location User
         map = googleMap
