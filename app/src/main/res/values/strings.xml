@@ -22,4 +22,5 @@
 
     <string name="favoris">Favoris</string>
     <string name="stations">Stations</string>
+    <string name="search_station">Chercher une station</string>
 </resources>
