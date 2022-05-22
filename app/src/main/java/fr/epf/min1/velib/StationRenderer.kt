@@ -27,7 +27,7 @@ class StationRenderer(
     private val bicycleIcon: BitmapDescriptor by lazy {
         val color = ContextCompat.getColor(
             context,
-            R.color.marker
+            R.color.markerClusterItem
         )
         BitmapHelper.vectorToBitmap(
             context,
