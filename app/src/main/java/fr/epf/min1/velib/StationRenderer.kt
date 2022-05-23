@@ -10,6 +10,7 @@ import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.maps.android.clustering.Cluster
 import com.google.maps.android.clustering.ClusterItem
 import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.clustering.view.DefaultClusterRenderer
@@ -26,7 +27,7 @@ class StationRenderer(
     private val bicycleIcon: BitmapDescriptor by lazy {
         val color = ContextCompat.getColor(
             context,
-            R.color.marker
+            R.color.markerClusterItem
         )
         BitmapHelper.vectorToBitmap(
             context,
@@ -35,10 +36,7 @@ class StationRenderer(
         )
     }
 
-    override fun onBeforeClusterItemRendered(
-        item: Station,
-        markerOptions: MarkerOptions
-    ) {
+    override fun onBeforeClusterItemRendered(item: Station, markerOptions: MarkerOptions) {
         markerOptions.title(item.name)
             .position(LatLng(item.lat, item.lon))
             .icon(bicycleIcon)
@@ -47,13 +45,25 @@ class StationRenderer(
         marker.tag = clusterItem
     }
 
-    /*override fun onBeforeClusterRendered(cluster: Cluster<StationPosition>, markerOptions: MarkerOptions) {
-        markerOptions?.icon(bicycleIcon)
+    private val bicyclesSeveralIcon: BitmapDescriptor by lazy {
+        val color = ContextCompat.getColor(
+            context,
+            R.color.markerCluster
+        )
+        BitmapHelper.vectorToBitmap(
+            context,
+            R.drawable.bikes_several_small_60,
+            color
+        )
     }
-    override fun onClusterRendered(cluster: Cluster<StationPosition>, marker: Marker) {
-        marker?.setIcon(bicycleIcon)
-    }*/
 
+    override fun onBeforeClusterRendered(cluster: Cluster<Station>, markerOptions: MarkerOptions) {
+        markerOptions.icon(bicyclesSeveralIcon)
+        markerOptions.title(cluster.size.toString())
+    }
 
+    override fun onClusterRendered(cluster: Cluster<Station>, marker: Marker) {
+        marker.setIcon(bicyclesSeveralIcon)
 
+    }
 }

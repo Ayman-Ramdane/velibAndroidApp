@@ -14,12 +14,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Velib">
+
         <activity
             android:name=".FavoriteAdapter"
             android:exported="false" />
         <activity
             android:name=".ListFavoriteActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:label="@string/title_activity_favories"/>
         <activity
             android:name=".StationAdapter"
             android:exported="false" />
@@ -28,11 +30,15 @@
             android:exported="false" />
         <activity
             android:name=".DetailsStationActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:label="@string/title_activity_details_station"/>
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
 
         <activity
             android:name=".MapsActivity"

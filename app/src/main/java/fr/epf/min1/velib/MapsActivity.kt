@@ -100,13 +100,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
 
         mapFragment.getMapAsync(this)
         mapFragment.getMapAsync { googleMap ->
+            map = googleMap
             addClusteredMarkers(googleMap)
             googleMap.setOnMapLoadedCallback {
                 val bounds = LatLngBounds.builder()
                 listStations.forEach { bounds.include(LatLng(it.lat, it.lon)) }
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
             }
-            map = googleMap
         }
 
         sharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
@@ -127,6 +127,43 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             R.id.map_favorite_list_action -> {
                 startActivity(Intent(this, ListFavoriteActivity::class.java))
             }
+
+            R.id.map_synchro_api_list_action -> {
+                if (checkForInternet(this)) {
+                    val dbStation = StationDatabase.createDatabase(this)
+                    val stationDao = dbStation.stationDao()
+
+                    synchroApiStationLocalisation()
+                    synchroApiStationDetails()
+
+                    runBlocking {
+                        stationDao.deleteAll()
+                    }
+
+                    listStationPositions.zip(listStationDetails).map {
+                        Station(
+                            it.first.station_id,
+                            it.first.name,
+                            it.first.lat,
+                            it.first.lon,
+                            it.first.stationCode,
+                            it.second.is_installed,
+                            it.second.is_renting,
+                            it.second.is_returning,
+                            it.second.numBikesAvailable,
+                            it.second.numDocksAvailable
+                        )
+                    }.map {
+                        runBlocking {
+                            stationDao.insert(it)
+                        }
+                    }
+
+                    runBlocking {
+                        listStations = stationDao.getAll()
+                    }
+                }
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -140,6 +177,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
                 clusterManager
             )
 
+        Log.d(TAG, "addClusteredMarkers: $listStations")
         clusterManager.addItems(listStations)
         clusterManager.cluster()
 
@@ -327,8 +365,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
      * This is where we can add markers or lines, add listeners or move the camera.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-
-        synchroApiStationDetails()
 
         //Location User
         map = googleMap
