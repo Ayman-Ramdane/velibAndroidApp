@@ -17,6 +17,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import androidx.core.app.ActivityCompat
 
@@ -58,12 +61,13 @@ lateinit var listFavorite: List<Favorite>
 //Location User
 private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
 private lateinit var map: GoogleMap
-var permissionApproved : Boolean = false
-private var locationUserLast = LocationUser(0.0,0.0)
-private var locationUserNew = LocationUser(0.0,0.0)
+var permissionApproved: Boolean = false
+private var locationUserLast = LocationUser(0.0, 0.0)
+private var locationUserNew = LocationUser(0.0, 0.0)
 private lateinit var markerLocationUser: Marker
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.OnSharedPreferenceChangeListener {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
+    SharedPreferences.OnSharedPreferenceChangeListener {
 
     private lateinit var binding: ActivityMapsBinding
 
@@ -72,6 +76,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
     private var foregroundOnlyLocationService: ForegroundOnlyLocationService? = null
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var locationButton: Button
+
+    //Stations names
+    private var listStationsName: MutableList<String> = mutableListOf()
 
     private val foregroundOnlyServiceConnection = object : ServiceConnection {
 
@@ -86,7 +93,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             foregroundOnlyLocationServiceBound = false
         }
     }
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -107,9 +113,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
                 listStations.forEach { bounds.include(LatLng(it.lat, it.lon)) }
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
             }
+
+            listStations.forEach { listStationsName.add(it.name) }
+
+            val searchBar = findViewById<AutoCompleteTextView>(R.id.map_search_station)
+            val searchAdapter =
+                ArrayAdapter(this, android.R.layout.simple_list_item_1, listStationsName)
+            searchBar.setAdapter(searchAdapter)
+
+            searchBar.onItemClickListener =
+                AdapterView.OnItemClickListener { parent, _, position, _ ->
+                    val selectedItemText = parent.getItemAtPosition(position)
+                    val station =
+                        listStations.filter { station -> station.name == selectedItemText }[0]
+
+                    val bounds = LatLngBounds.builder()
+                    bounds.include(LatLng(station.lat, station.lon))
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
+                }
         }
 
-        sharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+        sharedPreferences =
+            getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE)
         locationButton = findViewById(R.id.button_location_user)
     }
 
@@ -261,7 +286,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             return networkInfo.isConnected
         }
     }
-    
+
     override fun onStart() {
         super.onStart()
 
@@ -281,7 +306,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         super.onStop()
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) { }
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {}
 
     private fun locationPermissionApproved(): Boolean {
         return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
@@ -371,17 +396,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         permissionApproved = locationPermissionApproved()
 
         locationButton.setOnClickListener {
-            if(locationPermissionApproved()) {
+            if (locationPermissionApproved()) {
                 foregroundOnlyLocationService?.subscribeToLocationUpdates()
                     ?: Log.d(TAG, "Service Not Bound")
+            } else {
+                requestLocationPermissions()
             }
-            else {requestLocationPermissions()}
 
-            if(locationUserNew.latitude != 0.0 && locationUserNew.longitude != 0.0) {
-                map.moveCamera(CameraUpdateFactory.newLatLng(LatLng(locationUserNew.latitude, locationUserNew.longitude)))
+            if (locationUserNew.latitude != 0.0 && locationUserNew.longitude != 0.0) {
+                map.moveCamera(
+                    CameraUpdateFactory.newLatLng(
+                        LatLng(
+                            locationUserNew.latitude,
+                            locationUserNew.longitude
+                        )
+                    )
+                )
             }
         }
-        
+
         val dbStation = StationDatabase.createDatabase(this)
 
         val stationDao = dbStation.stationDao()
@@ -438,13 +471,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
 fun locationUserOnMap(locationUser: LocationUser) {
     locationUserNew = locationUser
 
-    if(locationUserLast.latitude == 0.0 && locationUserLast.longitude == 0.0) {
+    if (locationUserLast.latitude == 0.0 && locationUserLast.longitude == 0.0) {
         val coordinateNew = LatLng(locationUser.latitude, locationUser.longitude)
         markerLocationUser = map.addMarker(MarkerOptions().position(coordinateNew))!!
 
         locationUserLast = locationUser
-    }
-    else {
+    } else {
         markerLocationUser.remove()
 
         val coordinateNew = LatLng(locationUser.latitude, locationUser.longitude)
