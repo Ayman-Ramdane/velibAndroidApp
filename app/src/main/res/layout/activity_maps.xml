@@ -7,7 +7,7 @@
     tools:context=".MapsActivity"
     android:id="@+id/activity_maps">
 
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map"
         class="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
@@ -15,9 +15,13 @@
 
     <Button
         android:id="@+id/button_location_user"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Moi"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:background="@drawable/button_maps_shape"
+        android:paddingLeft="12dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginBottom="60dp"
+        app:icon="@drawable/ic_baseline_my_location_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -36,4 +40,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

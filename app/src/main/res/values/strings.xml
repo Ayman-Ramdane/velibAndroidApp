@@ -1,6 +1,8 @@
 <resources>
-    <string name="app_name">Velib</string>
-    <string name="title_activity_maps">MapsActivity</string>
+    <string name="app_name">Vélib</string>
+    <string name="title_activity_maps">Vélib</string>
+    <string name="title_activity_details_station">Détails de la station</string>
+    <string name="title_activity_favories">Liste des favoris</string>
 
     <!--Location User-->
     <string name="launch_activity">Launch activity</string>
@@ -22,5 +24,13 @@
 
     <string name="favoris">Favoris</string>
     <string name="stations">Stations</string>
+
     <string name="search_station">Chercher une station</string>
+
+    <string name="text_number_bikes_available">Nombre de vélos disponibles : </string>
+    <string name="text_number_docks_available">Nombre de bornes disponibles : </string>
+    <string name="text_ebike">eBike(s)</string>
+    <string name="text_mechanical_bike">vélo(s) mécanique(s)</string>
+    <string name="synchro_api">Synchro Api</string>
+
 </resources>

@@ -14,7 +14,12 @@
             tools:text="Nom de Station"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"/>
+            android:layout_gravity="center_vertical"
+
+            android:height="25dp"
+            android:textSize="18sp"
+            android:fontFamily="@font/convergence"
+            />
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>

@@ -7,5 +7,11 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="marker">#1C94E5</color>
+    <color name="markerCluster">#2160FF</color>
+    <color name="markerClusterItem">#007BFF</color>
+
+    <color name="button">#7ACDF3</color>
+    <color name="buttonNight">#AA202020</color>
+    <color name="bar">#1D1DFF</color>
+    <color name="barNight">#00089F</color>
 </resources>
