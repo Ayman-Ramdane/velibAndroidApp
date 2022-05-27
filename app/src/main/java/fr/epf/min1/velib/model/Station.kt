@@ -18,7 +18,9 @@ data class Station(
     @ColumnInfo val is_returning: Int?,
     @ColumnInfo val numBikesAvailable: Int?,
     @ColumnInfo val numDocksAvailable: Int?,
-    //val num_bikes_available_types: List<Map<String, Int>>?
+    @ColumnInfo val num_ebikes_available: Int?,
+    @ColumnInfo val num_Mechanical_bikes_available: Int?,
+    @ColumnInfo val credit_card_available: Boolean,
 ) :
     ClusterItem {
     override fun getPosition(): LatLng = LatLng(lat, lon)
