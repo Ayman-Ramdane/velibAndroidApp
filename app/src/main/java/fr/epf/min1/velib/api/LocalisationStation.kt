@@ -17,7 +17,8 @@ data class StationPosition(
     val name: String,
     val lat: Double,
     val lon: Double,
-    val stationCode: String
+    val stationCode: String,
+    val rental_methods: List<String>,
 ) :
     ClusterItem {
     override fun getPosition(): LatLng = LatLng(lat, lon)

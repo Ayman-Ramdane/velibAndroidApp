@@ -10,7 +10,7 @@ import fr.epf.min1.velib.model.Favorite
 import fr.epf.min1.velib.model.Station
 
 
-@Database(entities = [Station::class], version = 2)
+@Database(entities = [Station::class], version = 4)
 abstract class StationDatabase : RoomDatabase() {
     abstract fun stationDao(): StationDAO
 

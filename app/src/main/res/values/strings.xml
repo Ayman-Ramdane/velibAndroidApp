@@ -32,5 +32,6 @@
     <string name="text_ebike">eBike(s)</string>
     <string name="text_mechanical_bike">vélo(s) mécanique(s)</string>
     <string name="synchro_api">Synchro Api</string>
+    <string name="credit_card_available_string">Paiement par carte disponible</string>
 
 </resources>

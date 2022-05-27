@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
+import androidx.core.view.isVisible
+import fr.epf.min1.velib.api.StationDetails
 import fr.epf.min1.velib.database.FavoriteDatabase
 import fr.epf.min1.velib.model.Favorite
 import kotlinx.coroutines.runBlocking
@@ -34,6 +36,18 @@ class DetailsStationActivity : AppCompatActivity() {
         val numDocks = stationDetails.numDocksAvailable
         val numDocksTextView = findViewById<TextView>(R.id.details_stations_docks_textview)
         numDocksTextView.text = numDocks.toString()
+
+        val numMechanicalBikesAvailable = stationDetails.num_Mechanical_bikes_available
+        val numMechanicalBikesAvailableTextView = findViewById<TextView>(R.id.details_stations_nb_meca_textview)
+        numMechanicalBikesAvailableTextView.text = numMechanicalBikesAvailable.toString()
+
+        val numEbikesAvailable = stationDetails.num_ebikes_available
+        val numEbikesAvailableTextView = findViewById<TextView>(R.id.details_stations_nb_ebike_textview)
+        numEbikesAvailableTextView.text = numEbikesAvailable.toString()
+
+        val creditCardAvailable = stationDetails.credit_card_available
+        val creditCardAvailableTextView = findViewById<TextView>(R.id.details_stations_credit_card_available)
+        creditCardAvailableTextView.isVisible = creditCardAvailable
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

@@ -176,8 +176,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                             it.second.is_renting,
                             it.second.is_returning,
                             it.second.numBikesAvailable,
-                            it.second.numDocksAvailable
-                        )
+                            it.second.numDocksAvailable,
+                            it.second.num_bikes_available_types?.get(0)?.get("mechanical"),
+                            it.second.num_bikes_available_types?.get(1)?.get("ebike"),
+                            !it.first.rental_methods.isNullOrEmpty(),
+                            )
                     }.map {
                         runBlocking {
                             stationDao.insert(it)
@@ -438,8 +441,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback,
                     it.second.is_renting,
                     it.second.is_returning,
                     it.second.numBikesAvailable,
-                    it.second.numDocksAvailable
-                )
+                    it.second.numDocksAvailable,
+                    it.second.num_bikes_available_types?.get(0)?.get("mechanical"),
+                    it.second.num_bikes_available_types?.get(1)?.get("ebike"),
+                    !it.first.rental_methods.isNullOrEmpty(),
+                    )
             }.map {
                 runBlocking {
                     stationDao.insert(it)
