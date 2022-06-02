@@ -4,8 +4,14 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.241" />
+        <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/button_maps_shape.xml" value="0.2885" />
+        <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_baseline_credit_card.xml" value="0.2885" />
+        <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_baseline_electric_bolt.xml" value="0.2885" />
+        <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_baseline_favorite_24.xml" value="0.2885" />
+        <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_baseline_favorite_border_24.xml" value="0.2885" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_baseline_list_24.xml" value="0.2975" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_baseline_search_24.xml" value="0.289" />
+        <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_baseline_sync_24.xml" value="0.2885" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_launcher_background.xml" value="0.241" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/layout/activity_details_station.xml" value="0.21354166666666666" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/layout/activity_list_favorite.xml" value="0.196875" />

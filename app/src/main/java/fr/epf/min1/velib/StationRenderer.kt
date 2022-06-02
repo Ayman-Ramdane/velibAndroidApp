@@ -22,7 +22,8 @@ private const val TAG = "StationRenderer"
 class StationRenderer(
     private val context: Context,
     map: GoogleMap,
-    clusterManager: ClusterManager<Station> ): DefaultClusterRenderer<Station>(context, map, clusterManager) {
+    clusterManager: ClusterManager<Station>
+) : DefaultClusterRenderer<Station>(context, map, clusterManager) {
 
     private val bicycleIcon: BitmapDescriptor by lazy {
         val color = ContextCompat.getColor(
@@ -41,6 +42,7 @@ class StationRenderer(
             .position(LatLng(item.lat, item.lon))
             .icon(bicycleIcon)
     }
+
     override fun onClusterItemRendered(clusterItem: Station, marker: Marker) {
         marker.tag = clusterItem
     }

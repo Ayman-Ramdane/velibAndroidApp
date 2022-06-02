@@ -14,7 +14,4 @@ interface StationDAO {
 
     @Insert
     suspend fun insert(station: Station)
-
-//    @Update
-//    fun update(vararg stations: List<Station>)
 }

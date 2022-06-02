@@ -42,8 +42,8 @@
         android:minHeight="48dp"
         android:paddingLeft="10dp"
         android:paddingRight="5dp"
-        android:textColorHint="@color/button"
         android:textColor="@color/black"
+        android:textColorHint="@color/button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

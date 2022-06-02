@@ -13,13 +13,13 @@ class ListFavoriteActivity : AppCompatActivity() {
 
     private var favoriteAdapter: FavoriteAdapter? = null
 
-    val listFavoriteStations : MutableList<Station> = mutableListOf()
+    private val listFavoriteStations: MutableList<Station> = mutableListOf()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        listFavorite.forEach {  favorite ->
+        listFavorite.forEach { favorite ->
             val favoriteId = favorite.favorite_station_id
             listStations.forEach {
                 if (it.station_id == favoriteId) listFavoriteStations.add(it)

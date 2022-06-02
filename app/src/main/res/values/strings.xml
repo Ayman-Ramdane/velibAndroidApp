@@ -2,7 +2,7 @@
     <string name="app_name">Vélib</string>
     <string name="title_activity_maps">Vélib</string>
     <string name="title_activity_details_station">Détails de la station</string>
-    <string name="title_activity_favories">Liste des favoris</string>
+    <string name="title_activity_favorite">Liste des favoris</string>
 
     <string name="ok">OK</string>
     <string name="no_location_found">Veuillez activer la localisation de votre téléphone.</string>
@@ -20,5 +20,6 @@
 
     <string name="credit_card_available_string">Pass temporaires : achat possible en station (CB)</string>
     <string name="last_update_data">Mise à jour :</string>
+    <string name="no_internet_access">Pas d\'accès internet</string>
 
 </resources>

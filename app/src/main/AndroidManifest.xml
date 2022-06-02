@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="fr.epf.min1.velib">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -17,21 +18,16 @@
 
         <activity
             android:name=".FavoriteAdapter"
-            android:exported="false" />
+            android:exported="false"
+            tools:ignore="Instantiatable" />
         <activity
             android:name=".ListFavoriteActivity"
             android:exported="false"
-            android:label="@string/title_activity_favories"/>
-        <activity
-            android:name=".StationAdapter"
-            android:exported="false" />
-        <activity
-            android:name=".ListStationActivity"
-            android:exported="false" />
+            android:label="@string/title_activity_favorite" />
         <activity
             android:name=".DetailsStationActivity"
             android:exported="false"
-            android:label="@string/title_activity_details_station"/>
+            android:label="@string/title_activity_details_station" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -50,13 +46,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service
-            android:name=".maps.ForegroundOnlyLocationService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="location" />
-
     </application>
 
 </manifest>

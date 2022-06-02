@@ -40,22 +40,25 @@ class DetailsStationActivity : AppCompatActivity() {
         numDocksTextView.text = numDocks.toString()
 
         val numMechanicalBikesAvailable = stationDetails.num_Mechanical_bikes_available
-        val numMechanicalBikesAvailableTextView = findViewById<TextView>(R.id.details_stations_nb_meca_textview)
+        val numMechanicalBikesAvailableTextView =
+            findViewById<TextView>(R.id.details_stations_nb_meca_textview)
         numMechanicalBikesAvailableTextView.text = numMechanicalBikesAvailable.toString()
 
         val numEbikesAvailable = stationDetails.num_ebikes_available
-        val numEbikesAvailableTextView = findViewById<TextView>(R.id.details_stations_nb_ebike_textview)
+        val numEbikesAvailableTextView =
+            findViewById<TextView>(R.id.details_stations_nb_ebike_textview)
         numEbikesAvailableTextView.text = numEbikesAvailable.toString()
 
         val creditCardAvailable = stationDetails.credit_card_available
-        val creditCardAvailableTextView = findViewById<TextView>(R.id.details_stations_credit_card_available)
+        val creditCardAvailableTextView =
+            findViewById<TextView>(R.id.details_stations_credit_card_available)
         val creditCardAvailableImageView = findViewById<ImageView>(R.id.credit_card_image)
         creditCardAvailableTextView.isVisible = creditCardAvailable
         creditCardAvailableImageView.isVisible = creditCardAvailable
 
         val lastReportedUpdate = stationDetails.last_reported
         val lastReportedUpdateTextView = findViewById<TextView>(R.id.last_update_data_bike)
-        val lastReportedUpdateDate = Date(lastReportedUpdate*1000)
+        val lastReportedUpdateDate = Date(lastReportedUpdate * 1000)
         val formatter = SimpleDateFormat.getDateTimeInstance()
         val formatedDate = formatter.format(lastReportedUpdateDate)
         lastReportedUpdateTextView.text = formatedDate.toString()
