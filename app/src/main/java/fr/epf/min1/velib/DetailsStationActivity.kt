@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isVisible
 import fr.epf.min1.velib.api.StationDetails
@@ -47,7 +48,9 @@ class DetailsStationActivity : AppCompatActivity() {
 
         val creditCardAvailable = stationDetails.credit_card_available
         val creditCardAvailableTextView = findViewById<TextView>(R.id.details_stations_credit_card_available)
+        val creditCardAvailableImageView = findViewById<ImageView>(R.id.credit_card_image)
         creditCardAvailableTextView.isVisible = creditCardAvailable
+        creditCardAvailableImageView.isVisible = creditCardAvailable
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
