@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.maps.android.clustering.ClusterManager
 import fr.epf.min1.velib.api.LocalisationStation
 import fr.epf.min1.velib.api.StationDetails
@@ -50,7 +51,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
     private lateinit var binding: ActivityMapsBinding
 
     //Location User
-    private lateinit var locationButton: Button
+    private lateinit var locationButton: FloatingActionButton
     private var permissionDenied = false
     private lateinit var map: GoogleMap
     private val LOCATION_PERMISSION_REQUEST_CODE = 1

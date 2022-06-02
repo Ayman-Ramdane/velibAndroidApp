@@ -78,17 +78,6 @@ class DetailsStationActivity : AppCompatActivity() {
     @SuppressLint("UseCompatLoadingForDrawables")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.details_station_remove_all -> {
-                val dbFavorite = FavoriteDatabase.createDatabase(this)
-
-                val favoriteDao = dbFavorite.favoriteDao()
-
-                runBlocking {
-                    favoriteDao.deleteAll()
-                }
-
-                dbFavorite.close()
-            }
             R.id.details_station_favorite_button -> {
                 val iconFavorite = getDrawable(R.drawable.ic_baseline_favorite_24)
                 val iconNotFavorite = getDrawable(R.drawable.ic_baseline_favorite_border_24)

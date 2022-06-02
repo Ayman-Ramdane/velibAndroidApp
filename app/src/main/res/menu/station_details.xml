@@ -3,11 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/details_station_remove_all"
-        android:icon="@drawable/ic_baseline_delete_24"
-        android:title="Item"
-        app:showAsAction="ifRoom" />
-    <item
         android:id="@+id/details_station_favorite_button"
         android:checkable="true"
         android:icon="@drawable/ic_baseline_favorite_border_24"

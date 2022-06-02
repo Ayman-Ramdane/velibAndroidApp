@@ -19,6 +19,6 @@
     <string name="text_mechanical_bike">vélo(s) mécanique(s)</string>
 
     <string name="credit_card_available_string">Pass temporaires : achat possible en station (CB)</string>
-    <string name="last_update_data">Dernière mise à jour des données :</string>
+    <string name="last_update_data">Mise à jour :</string>
 
 </resources>
