@@ -5,12 +5,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isVisible
-import fr.epf.min1.velib.api.StationDetails
 import fr.epf.min1.velib.database.FavoriteDatabase
 import fr.epf.min1.velib.model.Favorite
 import kotlinx.coroutines.runBlocking
+import java.sql.Date
+import java.text.SimpleDateFormat
 
 private const val TAG = "DetailsStationActivity"
 
@@ -38,16 +40,29 @@ class DetailsStationActivity : AppCompatActivity() {
         numDocksTextView.text = numDocks.toString()
 
         val numMechanicalBikesAvailable = stationDetails.num_Mechanical_bikes_available
-        val numMechanicalBikesAvailableTextView = findViewById<TextView>(R.id.details_stations_nb_meca_textview)
+        val numMechanicalBikesAvailableTextView =
+            findViewById<TextView>(R.id.details_stations_nb_meca_textview)
         numMechanicalBikesAvailableTextView.text = numMechanicalBikesAvailable.toString()
 
         val numEbikesAvailable = stationDetails.num_ebikes_available
-        val numEbikesAvailableTextView = findViewById<TextView>(R.id.details_stations_nb_ebike_textview)
+        val numEbikesAvailableTextView =
+            findViewById<TextView>(R.id.details_stations_nb_ebike_textview)
         numEbikesAvailableTextView.text = numEbikesAvailable.toString()
 
         val creditCardAvailable = stationDetails.credit_card_available
-        val creditCardAvailableTextView = findViewById<TextView>(R.id.details_stations_credit_card_available)
+        val creditCardAvailableTextView =
+            findViewById<TextView>(R.id.details_stations_credit_card_available)
+        val creditCardAvailableImageView = findViewById<ImageView>(R.id.credit_card_image)
         creditCardAvailableTextView.isVisible = creditCardAvailable
+        creditCardAvailableImageView.isVisible = creditCardAvailable
+
+        val lastReportedUpdate = stationDetails.last_reported
+        val lastReportedUpdateTextView = findViewById<TextView>(R.id.last_update_data_bike)
+        val lastReportedUpdateDate = Date(lastReportedUpdate * 1000)
+        val formatter = SimpleDateFormat.getDateTimeInstance()
+        val formatedDate = formatter.format(lastReportedUpdateDate)
+        lastReportedUpdateTextView.text = formatedDate.toString()
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -75,17 +90,6 @@ class DetailsStationActivity : AppCompatActivity() {
     @SuppressLint("UseCompatLoadingForDrawables")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.details_station_remove_all -> {
-                val dbFavorite = FavoriteDatabase.createDatabase(this)
-
-                val favoriteDao = dbFavorite.favoriteDao()
-
-                runBlocking {
-                    favoriteDao.deleteAll()
-                }
-
-                dbFavorite.close()
-            }
             R.id.details_station_favorite_button -> {
                 val iconFavorite = getDrawable(R.drawable.ic_baseline_favorite_24)
                 val iconNotFavorite = getDrawable(R.drawable.ic_baseline_favorite_border_24)
@@ -115,7 +119,6 @@ class DetailsStationActivity : AppCompatActivity() {
 
                     item.icon = iconFavorite
                 }
-
 
 
                 runBlocking {

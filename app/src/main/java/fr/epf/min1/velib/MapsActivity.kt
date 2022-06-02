@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.maps.android.clustering.ClusterManager
 import fr.epf.min1.velib.api.LocalisationStation
 import fr.epf.min1.velib.api.StationDetails
@@ -50,7 +51,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
     private lateinit var binding: ActivityMapsBinding
 
     //Location User
-    private lateinit var locationButton: Button
+    private lateinit var locationButton: FloatingActionButton
     private var permissionDenied = false
     private lateinit var map: GoogleMap
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -106,51 +107,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.map_station_list_action -> {
-                startActivity(Intent(this, ListStationActivity::class.java))
-            }
-
             R.id.map_favorite_list_action -> {
                 startActivity(Intent(this, ListFavoriteActivity::class.java))
             }
 
             R.id.map_synchro_api_list_action -> {
                 if (checkForInternet(this)) {
-                    val dbStation = StationDatabase.createDatabase(this)
-                    val stationDao = dbStation.stationDao()
-
-                    synchroApiStationLocalisation()
-                    synchroApiStationDetails()
-
-                    runBlocking {
-                        stationDao.deleteAll()
-                    }
-
-                    listStationPositions.zip(listStationDetails).map {
-                        Station(
-                            it.first.station_id,
-                            it.first.name,
-                            it.first.lat,
-                            it.first.lon,
-                            it.first.stationCode,
-                            it.second.is_installed,
-                            it.second.is_renting,
-                            it.second.is_returning,
-                            it.second.numBikesAvailable,
-                            it.second.numDocksAvailable,
-                            it.second.num_bikes_available_types?.get(0)?.get("mechanical"),
-                            it.second.num_bikes_available_types?.get(1)?.get("ebike"),
-                            !it.first.rental_methods.isNullOrEmpty(),
-                            )
-                    }.map {
-                        runBlocking {
-                            stationDao.insert(it)
-                        }
-                    }
-
-                    runBlocking {
-                        listStations = stationDao.getAll()
-                    }
+                    refreshDataBase()
+                } else {
+                    Toast.makeText(this, getString(R.string.no_internet_access), Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
         }
@@ -225,6 +191,49 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         }
     }
 
+    private fun refreshDataBase(): List<Station> {
+        val dbStation = StationDatabase.createDatabase(this)
+        val stationDao = dbStation.stationDao()
+
+        synchroApiStationLocalisation()
+        synchroApiStationDetails()
+
+        runBlocking {
+            stationDao.deleteAll()
+        }
+
+        listStationPositions.zip(listStationDetails).map {
+            Station(
+                it.first.station_id,
+                it.first.name,
+                it.first.lat,
+                it.first.lon,
+                it.first.stationCode,
+                it.second.is_installed,
+                it.second.is_renting,
+                it.second.is_returning,
+                it.second.numBikesAvailable,
+                it.second.numDocksAvailable,
+                it.second.num_bikes_available_types?.get(0)?.get("mechanical"),
+                it.second.num_bikes_available_types?.get(1)?.get("ebike"),
+                !it.first.rental_methods.isNullOrEmpty(),
+                it.second.last_reported
+            )
+        }.map {
+            runBlocking {
+                stationDao.insert(it)
+            }
+        }
+
+        runBlocking {
+            listStations = stationDao.getAll()
+        }
+
+        dbStation.close()
+
+        return listStations
+    }
+
     @SuppressLint("MissingPermission")
     private fun checkForInternet(context: Context): Boolean {
 
@@ -262,63 +271,38 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         enableMyLocation()
         googleMap.uiSettings.isMyLocationButtonEnabled = false
         locationButton.setOnClickListener {
-            if( map.myLocation != null) {
+            if (map.myLocation != null) {
                 var userLocationLat = map.myLocation.latitude
                 var userLocationLon = map.myLocation.longitude
-                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(userLocationLat, userLocationLon), 20F))
-            }
-            else {
+                googleMap.moveCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        LatLng(
+                            userLocationLat,
+                            userLocationLon
+                        ), 20F
+                    )
+                )
+            } else {
                 Toast.makeText(this, R.string.no_location_found, Toast.LENGTH_SHORT).show()
             }
         }
 
-        val dbStation = StationDatabase.createDatabase(this)
-        val stationDao = dbStation.stationDao()
-
         if (checkForInternet(this)) {
-            synchroApiStationLocalisation()
-            synchroApiStationDetails()
-
-            runBlocking {
-                stationDao.deleteAll()
-            }
-
-            listStationPositions.zip(listStationDetails).map {
-                Station(
-                    it.first.station_id,
-                    it.first.name,
-                    it.first.lat,
-                    it.first.lon,
-                    it.first.stationCode,
-                    it.second.is_installed,
-                    it.second.is_renting,
-                    it.second.is_returning,
-                    it.second.numBikesAvailable,
-                    it.second.numDocksAvailable,
-                    it.second.num_bikes_available_types?.get(0)?.get("mechanical"),
-                    it.second.num_bikes_available_types?.get(1)?.get("ebike"),
-                    !it.first.rental_methods.isNullOrEmpty(),
-                    )
-            }.map {
-                runBlocking {
-                    stationDao.insert(it)
-                }
-            }
-
-            runBlocking {
-                listStations = stationDao.getAll()
-            }
+            refreshDataBase()
         } else {
+            val dbStation = StationDatabase.createDatabase(this)
+            val stationDao = dbStation.stationDao()
             runBlocking {
                 listStations = stationDao.getAll()
             }
+            dbStation.close()
         }
-        dbStation.close()
 
         val dbFavorite = FavoriteDatabase.createDatabase(this)
         val favoriteDao = dbFavorite.favoriteDao()
 
         runBlocking {
+
             listFavorite = favoriteDao.getAll()
         }
 
@@ -329,21 +313,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
     private fun enableMyLocation() {
         if (!::map.isInitialized) return
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED) {
+            == PackageManager.PERMISSION_GRANTED
+        ) {
             map.isMyLocationEnabled = true
         } else {
-            requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+            requestPermission(
+                this, LOCATION_PERMISSION_REQUEST_CODE,
                 Manifest.permission.ACCESS_FINE_LOCATION, true
             )
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
             return
         }
-        if (isPermissionGranted(permissions, grantResults, Manifest.permission.ACCESS_FINE_LOCATION)) {
+        if (isPermissionGranted(
+                permissions,
+                grantResults,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+        ) {
             enableMyLocation()
         } else {
             permissionDenied = true

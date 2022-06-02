@@ -15,8 +15,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:height="25dp"
-            android:textSize="18sp"
             android:fontFamily="@font/convergence"
+            android:textSize="18sp"
             tools:text="Nom de Station" />
     </LinearLayout>
 

@@ -2,21 +2,24 @@
     <string name="app_name">Vélib</string>
     <string name="title_activity_maps">Vélib</string>
     <string name="title_activity_details_station">Détails de la station</string>
-    <string name="title_activity_favories">Liste des favoris</string>
+    <string name="title_activity_favorite">Liste des favoris</string>
 
     <string name="ok">OK</string>
     <string name="no_location_found">Veuillez activer la localisation de votre téléphone.</string>
 
     <string name="favoris">Favoris</string>
     <string name="stations">Stations</string>
+    <string name="synchro_api">Synchro Api</string>
 
-    <string name="search_station">Chercher une station</string>
+    <string name="search_station">Rechercher le nom d\'une station</string>
 
     <string name="text_number_bikes_available">Nombre de vélos disponibles : </string>
     <string name="text_number_docks_available">Nombre de bornes disponibles : </string>
     <string name="text_ebike">eBike(s)</string>
     <string name="text_mechanical_bike">vélo(s) mécanique(s)</string>
-    <string name="synchro_api">Synchro Api</string>
-    <string name="credit_card_available_string">Paiement par carte disponible</string>
+
+    <string name="credit_card_available_string">Pass temporaires : achat possible en station (CB)</string>
+    <string name="last_update_data">Mise à jour :</string>
+    <string name="no_internet_access">Pas d\'accès internet</string>
 
 </resources>
