@@ -9,8 +9,7 @@ import fr.epf.min1.velib.dao.StationDAO
 import fr.epf.min1.velib.model.Favorite
 import fr.epf.min1.velib.model.Station
 
-
-@Database(entities = [Station::class], version = 4)
+@Database(entities = [Station::class], version = 5)
 abstract class StationDatabase : RoomDatabase() {
     abstract fun stationDao(): StationDAO
 

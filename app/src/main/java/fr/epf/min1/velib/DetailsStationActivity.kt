@@ -8,10 +8,11 @@ import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isVisible
-import fr.epf.min1.velib.api.StationDetails
 import fr.epf.min1.velib.database.FavoriteDatabase
 import fr.epf.min1.velib.model.Favorite
 import kotlinx.coroutines.runBlocking
+import java.sql.Date
+import java.text.SimpleDateFormat
 
 private const val TAG = "DetailsStationActivity"
 
@@ -51,6 +52,14 @@ class DetailsStationActivity : AppCompatActivity() {
         val creditCardAvailableImageView = findViewById<ImageView>(R.id.credit_card_image)
         creditCardAvailableTextView.isVisible = creditCardAvailable
         creditCardAvailableImageView.isVisible = creditCardAvailable
+
+        val lastReportedUpdate = stationDetails.last_reported
+        val lastReportedUpdateTextView = findViewById<TextView>(R.id.last_update_data_bike)
+        val lastReportedUpdateDate = Date(lastReportedUpdate*1000)
+        val formatter = SimpleDateFormat.getDateTimeInstance()
+        val formatedDate = formatter.format(lastReportedUpdateDate)
+        lastReportedUpdateTextView.text = formatedDate.toString()
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -107,7 +116,6 @@ class DetailsStationActivity : AppCompatActivity() {
 
                     item.icon = iconFavorite
                 }
-
 
 
                 runBlocking {

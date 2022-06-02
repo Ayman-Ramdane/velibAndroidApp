@@ -142,6 +142,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                             it.second.num_bikes_available_types?.get(0)?.get("mechanical"),
                             it.second.num_bikes_available_types?.get(1)?.get("ebike"),
                             !it.first.rental_methods.isNullOrEmpty(),
+                            it.second.last_reported
                             )
                     }.map {
                         runBlocking {
@@ -299,6 +300,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                     it.second.num_bikes_available_types?.get(0)?.get("mechanical"),
                     it.second.num_bikes_available_types?.get(1)?.get("ebike"),
                     !it.first.rental_methods.isNullOrEmpty(),
+                    it.second.last_reported
                     )
             }.map {
                 runBlocking {

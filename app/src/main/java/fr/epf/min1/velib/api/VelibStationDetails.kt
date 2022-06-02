@@ -17,5 +17,6 @@ data class StationDetails (
     val is_returning: Int?,
     val numBikesAvailable: Int?,
     val numDocksAvailable: Int?,
-    val num_bikes_available_types: List<Map<String, Int>>?
+    val num_bikes_available_types: List<Map<String, Int>>?,
+    val last_reported: Long
 )
