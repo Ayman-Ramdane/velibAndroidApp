@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package fr.epf.min1.velib
 
 import android.Manifest
@@ -52,6 +54,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
 
     //Location User
     private lateinit var locationButton: FloatingActionButton
+    private lateinit var filterEbike: FloatingActionButton
+    private lateinit var filterMechanical: FloatingActionButton
+    private lateinit var filterDock: FloatingActionButton
+
     private var permissionDenied = false
     private lateinit var map: GoogleMap
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -98,6 +104,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         }
 
         locationButton = findViewById(R.id.button_location_user)
+        filterEbike = findViewById(R.id.map_filter_ebike)
+        filterMechanical = findViewById(R.id.map_filter_mechanical)
+        filterDock = findViewById(R.id.map_filter_docks)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -228,6 +237,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         runBlocking {
             listStations = stationDao.getAll()
         }
+        listStations = listStations.filter { it.is_installed == 1 }
 
         dbStation.close()
 
@@ -260,6 +270,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         }
     }
 
+    private fun refreshListStationFromDataBase() {
+        val dbStation = StationDatabase.createDatabase(this)
+        val stationDao = dbStation.stationDao()
+
+        runBlocking {
+            listStations = stationDao.getAll()
+        }
+        listStations = listStations.filter { it.is_installed == 1 }
+
+        dbStation.close()
+    }
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -272,8 +294,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         googleMap.uiSettings.isMyLocationButtonEnabled = false
         locationButton.setOnClickListener {
             if (map.myLocation != null) {
-                var userLocationLat = map.myLocation.latitude
-                var userLocationLon = map.myLocation.longitude
+                val userLocationLat = map.myLocation.latitude
+                val userLocationLon = map.myLocation.longitude
                 googleMap.moveCamera(
                     CameraUpdateFactory.newLatLngZoom(
                         LatLng(
@@ -290,12 +312,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         if (checkForInternet(this)) {
             refreshDataBase()
         } else {
-            val dbStation = StationDatabase.createDatabase(this)
-            val stationDao = dbStation.stationDao()
-            runBlocking {
-                listStations = stationDao.getAll()
-            }
-            dbStation.close()
+            refreshListStationFromDataBase()
         }
 
         val dbFavorite = FavoriteDatabase.createDatabase(this)
@@ -307,6 +324,73 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         }
 
         dbFavorite.close()
+
+        filterEbike.setOnClickListener {
+            if (!filterEbike.isExpanded) {
+                if (filterDock.isExpanded || filterMechanical.isExpanded) {
+                    refreshListStationFromDataBase()
+                    filterDock.isExpanded = false
+                    filterDock.size = FloatingActionButton.SIZE_NORMAL
+
+                    filterMechanical.isExpanded = false
+                    filterMechanical.size = FloatingActionButton.SIZE_NORMAL
+                }
+
+                listStations =
+                    listStations.filter { it.num_ebikes_available!! > 0 && it.is_renting == 1 }
+                filterEbike.isExpanded = !filterEbike.isExpanded
+                filterEbike.size = FloatingActionButton.SIZE_MINI
+            } else {
+                refreshListStationFromDataBase()
+                filterEbike.isExpanded = !filterEbike.isExpanded
+                filterEbike.size = FloatingActionButton.SIZE_NORMAL
+            }
+        }
+
+        filterMechanical.setOnClickListener {
+            if (!filterMechanical.isExpanded) {
+                if (filterDock.isExpanded || filterEbike.isExpanded) {
+                    refreshListStationFromDataBase()
+                    filterDock.isExpanded = false
+                    filterDock.size = FloatingActionButton.SIZE_NORMAL
+
+                    filterEbike.isExpanded = false
+                    filterEbike.size = FloatingActionButton.SIZE_NORMAL
+                }
+
+                listStations =
+                    listStations.filter { it.num_Mechanical_bikes_available!! > 0 && it.is_renting == 1 }
+                filterMechanical.isExpanded = !filterMechanical.isExpanded
+                filterMechanical.size = FloatingActionButton.SIZE_MINI
+            } else {
+                refreshListStationFromDataBase()
+                filterMechanical.isExpanded = !filterMechanical.isExpanded
+                filterMechanical.size = FloatingActionButton.SIZE_NORMAL
+            }
+        }
+
+        filterDock.setOnClickListener {
+            if (!filterDock.isExpanded) {
+                if (filterEbike.isExpanded || filterMechanical.isExpanded) {
+                    refreshListStationFromDataBase()
+                    filterEbike.isExpanded = false
+                    filterEbike.size = FloatingActionButton.SIZE_NORMAL
+
+                    filterMechanical.isExpanded = false
+                    filterMechanical.size = FloatingActionButton.SIZE_NORMAL
+                }
+
+                listStations =
+                    listStations.filter { it.numDocksAvailable!! > 0 && it.is_returning == 1 }
+                filterDock.isExpanded = !filterDock.isExpanded
+                filterDock.size = FloatingActionButton.SIZE_MINI
+            } else {
+                refreshListStationFromDataBase()
+                filterDock.isExpanded = !filterDock.isExpanded
+                filterDock.size = FloatingActionButton.SIZE_NORMAL
+            }
+        }
+
     }
 
     @SuppressLint("MissingPermission")

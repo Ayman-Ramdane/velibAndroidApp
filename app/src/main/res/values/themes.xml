@@ -1,10 +1,35 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.Velib" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.Velib" parent="Theme.MaterialComponents.DayNight">
         <item name="colorPrimary">@color/bar</item>
         <item name="colorSecondary">@color/button</item>
         <item name="colorOnSecondary">@color/barDarker</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">@color/barDarker</item>
+        <item name="android:statusBarColor">@color/barDarker</item>
+
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.App.SmallComponent</item>
+        <item name="actionBarTheme">@style/Theme.ActionBar</item>
+        <item name="autoCompleteTextViewStyle">@style/SearchBar</item>
+
     </style>
+
+    <!--    Style Floating Buttons-->
+    <style name="ShapeAppearance.App.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+
+    <!--    Style toolbar-->
+    <style name="Theme.ActionBar" parent="Theme.MaterialComponents.DayNight.DarkActionBar.Bridge">
+        <item name="colorPrimary">@color/bar</item>
+        <item name="android:textColorPrimary">@color/white</item>
+    </style>
+
+    <!--    Style SearchBar-->
+    <style name="SearchBar" parent="Widget.AppCompat.AutoCompleteTextView">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textColorHint">@color/button</item>
+        <item name="android:background">@color/white</item>
+    </style>
+
 </resources>
