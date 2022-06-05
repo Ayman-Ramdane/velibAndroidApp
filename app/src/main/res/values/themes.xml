@@ -1,16 +1,14 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.Velib" parent="Theme.MaterialComponents.DayNight">
-        <item name="colorPrimary">@color/bar</item>
         <item name="colorSecondary">@color/button</item>
-        <item name="colorOnSecondary">@color/barDarker</item>
+        <item name="colorOnSecondary">@color/statusBarDark</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">@color/barDarker</item>
+        <item name="android:statusBarColor">@color/statusBar</item>
 
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.App.SmallComponent</item>
         <item name="actionBarTheme">@style/Theme.ActionBar</item>
         <item name="autoCompleteTextViewStyle">@style/SearchBar</item>
-
     </style>
 
     <!--    Style Floating Buttons-->
@@ -21,15 +19,16 @@
 
     <!--    Style toolbar-->
     <style name="Theme.ActionBar" parent="Theme.MaterialComponents.DayNight.DarkActionBar.Bridge">
-        <item name="colorPrimary">@color/bar</item>
+        <item name="colorPrimary">@color/actionBarColor</item>
         <item name="android:textColorPrimary">@color/white</item>
     </style>
 
     <!--    Style SearchBar-->
     <style name="SearchBar" parent="Widget.AppCompat.AutoCompleteTextView">
         <item name="android:textColor">@color/black</item>
-        <item name="android:textColorHint">@color/button</item>
-        <item name="android:background">@color/white</item>
+        <item name="android:textColorHint">@color/textSearch</item>
+        <item name="android:background">@color/background</item>
+        <item name="android:foregroundTint">@color/textSearch</item>
     </style>
 
 </resources>

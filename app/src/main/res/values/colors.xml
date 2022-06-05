@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
     <color name="markerCluster">#2160FF</color>
     <color name="markerClusterItem">#007BFF</color>
+
     <color name="button">#91D8F8</color>
-    <color name="buttonNight">#0F72E3</color>
-    <color name="buttonShape">#01579B</color>
-    <color name="bar">#1919CF</color>
-    <color name="barDarker">#09147A</color>
+    <color name="actionBarColor">#0F72E3</color>
+    <color name="statusBar">#01579B</color>
+    <color name="actionBarColorDark">#133B9E</color>
+    <color name="statusBarDark">#09147A</color>
+
+    <color name="background">#CBD8EFFD</color>
+    <color name="backgroundDark">#CC1B1B1B</color>
+    <color name="textSearch">#921A2268</color>
+    <color name="textSearchLight">#CCFFFFFF</color>
 </resources>
