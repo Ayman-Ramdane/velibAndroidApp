@@ -2,12 +2,9 @@ package fr.epf.min1.velib
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import fr.epf.min1.velib.model.Station
-
-private const val TAG = "ListFavoriteActivity"
 
 class ListFavoriteActivity : AppCompatActivity() {
 

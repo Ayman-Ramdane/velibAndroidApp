@@ -2,7 +2,6 @@ package fr.epf.min1.velib.dao
 
 import androidx.room.*
 import fr.epf.min1.velib.model.Station
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StationDAO {

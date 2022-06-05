@@ -6,6 +6,6 @@
         android:id="@+id/details_station_favorite_button"
         android:checkable="true"
         android:icon="@drawable/ic_baseline_favorite_border_24"
-        android:title="@string/favoris"
+        android:title="@string/favorites"
         app:showAsAction="ifRoom" />
 </menu>

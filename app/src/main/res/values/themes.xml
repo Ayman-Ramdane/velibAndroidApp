@@ -3,6 +3,7 @@
     <style name="Theme.Velib" parent="Theme.MaterialComponents.DayNight">
         <item name="colorSecondary">@color/button</item>
         <item name="colorOnSecondary">@color/statusBarDark</item>
+
         <!-- Status bar color. -->
         <item name="android:statusBarColor">@color/statusBar</item>
 

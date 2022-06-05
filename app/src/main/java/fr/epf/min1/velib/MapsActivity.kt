@@ -3,21 +3,26 @@
 package fr.epf.min1.velib
 
 import android.Manifest
-import android.content.pm.PackageManager
-import android.util.Log
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
 import androidx.core.content.ContextCompat
-import com.google.android.gms.maps.*
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -33,37 +38,39 @@ import fr.epf.min1.velib.maps.PermissionUtils.isPermissionGranted
 import fr.epf.min1.velib.maps.PermissionUtils.requestPermission
 import fr.epf.min1.velib.model.Favorite
 import fr.epf.min1.velib.model.Station
-
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
-private const val TAG = "MapsActivity"
 lateinit var listStations: List<Station>
 lateinit var listFavorite: List<Favorite>
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissionsResultCallback {
+    // Map
+    private lateinit var map: GoogleMap
     private lateinit var mapFragment: SupportMapFragment
     private lateinit var clusterManager: ClusterManager<Station>
     private lateinit var binding: ActivityMapsBinding
 
-    //Location User
+    // Location User
     private lateinit var locationButton: FloatingActionButton
     private lateinit var filterEbike: FloatingActionButton
     private lateinit var filterMechanical: FloatingActionButton
     private lateinit var filterDock: FloatingActionButton
 
+    // Permissions
     private var permissionDenied = false
-    private lateinit var map: GoogleMap
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
 
-    //Stations
+    // Stations
     private var listStationPositions: List<StationPosition> = listOf()
     private var listStationDetails: List<StationDetails> = listOf()
     private var listStationsName: MutableList<String> = mutableListOf()
-    var listStationMarkers: List<Station> = listOf()
+    private var listStationMarkers: List<Station> = listOf()
+
+    // SearchBar
     private lateinit var searchBar: AutoCompleteTextView
     private lateinit var searchAdapter: ArrayAdapter<String>
 
@@ -111,6 +118,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
             R.id.map_synchro_api_list_action -> {
                 if (checkForInternet(this)) {
                     refreshDataBase()
+                    mapFragment.getMapAsync { googleMap -> refreshMarkers(googleMap) }
                 } else {
                     Toast.makeText(this, getString(R.string.no_internet_access), Toast.LENGTH_SHORT)
                         .show()
@@ -120,198 +128,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         return super.onOptionsItemSelected(item)
     }
 
-    private fun addClusteredMarkers(googleMap: GoogleMap) {
-        clusterManager.renderer =
-            StationRenderer(
-                this,
-                googleMap,
-                clusterManager
-            )
-
-        Log.d(TAG, "addClusteredMarkers: $listStationMarkers")
-        clusterManager.addItems(listStationMarkers)
-        clusterManager.cluster()
-
-        googleMap.setOnCameraIdleListener {
-            clusterManager.onCameraIdle()
-        }
-
-        clusterManager.setOnClusterItemClickListener {
-            val intent = Intent(this, DetailsStationActivity::class.java)
-            intent.putExtra("station_id", it.station_id)
-            intent.putExtra("station_name", it.name)
-            startActivity(intent)
-            true
-        }
-    }
-
-    private fun refreshMarkers(googleMap: GoogleMap) {
-        clusterManager.clearItems()
-        clusterManager.cluster()
-        setupSearchBarAdapter()
-        addClusteredMarkers(googleMap)
-    }
-
-    private fun setupSearchBarAdapter() {
-        listStationsName = mutableListOf()
-        listStationMarkers.forEach { listStationsName.add(it.name) }
-
-        searchAdapter =
-            ArrayAdapter(this, android.R.layout.simple_list_item_1, listStationsName)
-        searchBar.setAdapter(searchAdapter)
-    }
-
-    private fun synchroApiStationLocalisation() {
-        val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-        val client = OkHttpClient.Builder()
-            .addInterceptor(httpLoggingInterceptor)
-            .build()
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://velib-metropole-opendata.smoove.pro/opendata/Velib_Metropole/")
-            .addConverterFactory(MoshiConverterFactory.create())
-            .client(client)
-            .build()
-        val service = retrofit.create(LocalisationStation::class.java)
-
-        runBlocking {
-            listStationPositions = service.getStations().data.stations
-        }
-    }
-
-    private fun synchroApiStationDetails() {
-        val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-
-        val client = OkHttpClient.Builder()
-            .addInterceptor(httpLoggingInterceptor)
-            .build()
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://velib-metropole-opendata.smoove.pro/opendata/Velib_Metropole/")
-            .addConverterFactory(MoshiConverterFactory.create())
-            .client(client)
-            .build()
-
-        val service = retrofit.create(VelibStationDetails::class.java)
-
-        runBlocking {
-            val result = service.getStations()
-            listStationDetails = result.data.stations
-        }
-    }
-
-    private fun refreshDataBase() {
-        val dbStation = StationDatabase.createDatabase(this)
-        val stationDao = dbStation.stationDao()
-
-        synchroApiStationLocalisation()
-        synchroApiStationDetails()
-
-        runBlocking {
-            stationDao.deleteAll()
-        }
-
-        listStationPositions.zip(listStationDetails).map {
-            Station(
-                it.first.station_id,
-                it.first.name,
-                it.first.lat,
-                it.first.lon,
-                it.first.stationCode,
-                it.second.is_installed,
-                it.second.is_renting,
-                it.second.is_returning,
-                it.second.numBikesAvailable,
-                it.second.numDocksAvailable,
-                it.second.num_bikes_available_types?.get(0)?.get("mechanical"),
-                it.second.num_bikes_available_types?.get(1)?.get("ebike"),
-                !it.first.rental_methods.isNullOrEmpty(),
-                it.second.last_reported
-            )
-        }.map {
-            runBlocking {
-                stationDao.insert(it)
-            }
-        }
-
-        runBlocking {
-            listStations = stationDao.getAll()
-        }
-        listStations = listStations.filter { it.is_installed == 1 }
-
-        listStationMarkers = listStations
-
-        dbStation.close()
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun checkForInternet(context: Context): Boolean {
-
-        val connectivityManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-        val network = connectivityManager.activeNetwork ?: return false
-
-        val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
-
-        return when {
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-            else -> false
-        }
-    }
-
-    private fun refreshListStationFromDataBase() {
-        val dbStation = StationDatabase.createDatabase(this)
-        val stationDao = dbStation.stationDao()
-
-        runBlocking {
-            listStations = stationDao.getAll()
-        }
-        listStations = listStations.filter { it.is_installed == 1 }
-
-        listStationMarkers = listStations
-
-        dbStation.close()
-    }
-
-    private fun resetFloatingActionButtons(FAB1: FloatingActionButton, FAB2: FloatingActionButton) {
-        if (FAB1.isExpanded || FAB2.isExpanded) {
-            refreshListStationFromDataBase()
-            FAB1.isExpanded = false
-            FAB1.size = FloatingActionButton.SIZE_NORMAL
-
-            FAB2.isExpanded = false
-            FAB2.size = FloatingActionButton.SIZE_NORMAL
-        }
-    }
-
-    private fun switchFloatingActionButtons(FAB: FloatingActionButton) {
-        if (FAB.isExpanded) {
-            FAB.isExpanded = !FAB.isExpanded
-            FAB.size = FloatingActionButton.SIZE_NORMAL
-        } else {
-            FAB.isExpanded = !FAB.isExpanded
-            FAB.size = FloatingActionButton.SIZE_MINI
-        }
-    }
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera.
-     */
     override fun onMapReady(googleMap: GoogleMap) {
 
         map = googleMap
         enableMyLocation()
         googleMap.uiSettings.isMyLocationButtonEnabled = false
         locationButton.setOnClickListener {
-            if(permissionDenied) {
+            if (permissionDenied) {
                 enableMyLocation()
                 Toast.makeText(this, R.string.no_permission_location, Toast.LENGTH_SHORT).show()
             } else {
@@ -320,7 +143,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                     var userLocationLon = map.myLocation.longitude
                     googleMap.moveCamera(
                         CameraUpdateFactory.newLatLngZoom(
-                            LatLng(userLocationLat,userLocationLon), 20F)
+                            LatLng(userLocationLat, userLocationLon), 20F
+                        )
                     )
                 } else {
                     Toast.makeText(this, R.string.no_location_found, Toast.LENGTH_SHORT).show()
@@ -408,6 +232,172 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         }
     }
 
+    private fun setupSearchBarAdapter() {
+        listStationsName = mutableListOf()
+        listStationMarkers.forEach { listStationsName.add(it.name) }
+
+        searchAdapter =
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, listStationsName)
+        searchBar.setAdapter(searchAdapter)
+    }
+
+    // Map Functions
+    private fun addClusteredMarkers(googleMap: GoogleMap) {
+        clusterManager.renderer =
+            StationRenderer(
+                this,
+                googleMap,
+                clusterManager
+            )
+
+        clusterManager.addItems(listStationMarkers)
+        clusterManager.cluster()
+
+        googleMap.setOnCameraIdleListener {
+            clusterManager.onCameraIdle()
+        }
+
+        clusterManager.setOnClusterItemClickListener {
+            val intent = Intent(this, DetailsStationActivity::class.java)
+            intent.putExtra("station_id", it.station_id)
+            intent.putExtra("station_name", it.name)
+            startActivity(intent)
+            true
+        }
+    }
+
+    private fun refreshMarkers(googleMap: GoogleMap) {
+        clusterManager.clearItems()
+        clusterManager.cluster()
+        setupSearchBarAdapter()
+        addClusteredMarkers(googleMap)
+    }
+
+    // Fetch API Data
+    private fun synchroApiStationLocalisation() {
+        val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+        val client = OkHttpClient.Builder()
+            .addInterceptor(httpLoggingInterceptor)
+            .build()
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://velib-metropole-opendata.smoove.pro/opendata/Velib_Metropole/")
+            .addConverterFactory(MoshiConverterFactory.create())
+            .client(client)
+            .build()
+        val service = retrofit.create(LocalisationStation::class.java)
+
+        runBlocking {
+            listStationPositions = service.getStations().data.stations
+        }
+    }
+
+    private fun synchroApiStationDetails() {
+        val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
+        val client = OkHttpClient.Builder()
+            .addInterceptor(httpLoggingInterceptor)
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://velib-metropole-opendata.smoove.pro/opendata/Velib_Metropole/")
+            .addConverterFactory(MoshiConverterFactory.create())
+            .client(client)
+            .build()
+
+        val service = retrofit.create(VelibStationDetails::class.java)
+
+        runBlocking {
+            val result = service.getStations()
+            listStationDetails = result.data.stations
+        }
+    }
+
+    // Refresh Data
+    private fun refreshDataBase() {
+        val dbStation = StationDatabase.createDatabase(this)
+        val stationDao = dbStation.stationDao()
+
+        synchroApiStationLocalisation()
+        synchroApiStationDetails()
+
+        runBlocking {
+            stationDao.deleteAll()
+        }
+
+        listStationPositions.zip(listStationDetails).map {
+            Station(
+                it.first.station_id,
+                it.first.name,
+                it.first.lat,
+                it.first.lon,
+                it.first.stationCode,
+                it.second.is_installed,
+                it.second.is_renting,
+                it.second.is_returning,
+                it.second.numBikesAvailable,
+                it.second.numDocksAvailable,
+                it.second.num_bikes_available_types?.get(0)?.get("mechanical"),
+                it.second.num_bikes_available_types?.get(1)?.get("ebike"),
+                !it.first.rental_methods.isNullOrEmpty(),
+                it.second.last_reported
+            )
+        }.map {
+            runBlocking {
+                stationDao.insert(it)
+            }
+        }
+
+        runBlocking {
+            listStations = stationDao.getAll()
+        }
+        listStations = listStations.filter { it.is_installed == 1 }
+
+        listStationMarkers = listStations
+
+        dbStation.close()
+    }
+
+    private fun refreshListStationFromDataBase() {
+        val dbStation = StationDatabase.createDatabase(this)
+        val stationDao = dbStation.stationDao()
+
+        runBlocking {
+            listStations = stationDao.getAll()
+        }
+        listStations = listStations.filter { it.is_installed == 1 }
+
+        listStationMarkers = listStations
+
+        dbStation.close()
+    }
+
+    // Floating Action Buttons
+    private fun resetFloatingActionButtons(FAB1: FloatingActionButton, FAB2: FloatingActionButton) {
+        if (FAB1.isExpanded || FAB2.isExpanded) {
+            refreshListStationFromDataBase()
+            FAB1.isExpanded = false
+            FAB1.size = FloatingActionButton.SIZE_NORMAL
+
+            FAB2.isExpanded = false
+            FAB2.size = FloatingActionButton.SIZE_NORMAL
+        }
+    }
+
+    private fun switchFloatingActionButtons(FAB: FloatingActionButton) {
+        if (FAB.isExpanded) {
+            FAB.isExpanded = !FAB.isExpanded
+            FAB.size = FloatingActionButton.SIZE_NORMAL
+        } else {
+            FAB.isExpanded = !FAB.isExpanded
+            FAB.size = FloatingActionButton.SIZE_MINI
+        }
+    }
+
+    // Utils
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
         if (!::map.isInitialized) return
@@ -418,7 +408,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         } else {
             requestPermission(
                 this, LOCATION_PERMISSION_REQUEST_CODE,
-                Manifest.permission.ACCESS_FINE_LOCATION)
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
         }
     }
 
@@ -431,24 +422,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
             return
         }
-        if (isPermissionGranted(
+        permissionDenied = if (isPermissionGranted(
                 permissions,
                 grantResults,
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
         ) {
             enableMyLocation()
-            permissionDenied = false
+            false
         } else {
-            permissionDenied = true
+            true
         }
     }
 
-    override fun onResumeFragments() {
-        super.onResumeFragments()
-        if (permissionDenied) {
-            //showMissingPermissionError()
+    @SuppressLint("MissingPermission")
+    private fun checkForInternet(context: Context): Boolean {
 
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val network = connectivityManager.activeNetwork ?: return false
+
+        val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return when {
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            else -> false
         }
     }
 }

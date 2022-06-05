@@ -14,8 +14,6 @@ import kotlinx.coroutines.runBlocking
 import java.sql.Date
 import java.text.SimpleDateFormat
 
-private const val TAG = "DetailsStationActivity"
-
 class DetailsStationActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
