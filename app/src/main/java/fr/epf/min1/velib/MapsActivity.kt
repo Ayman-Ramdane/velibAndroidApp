@@ -29,7 +29,6 @@ import fr.epf.min1.velib.api.VelibStationDetails
 import fr.epf.min1.velib.database.FavoriteDatabase
 import fr.epf.min1.velib.database.StationDatabase
 import fr.epf.min1.velib.databinding.ActivityMapsBinding
-import fr.epf.min1.velib.maps.PermissionUtils.PermissionDeniedDialog.Companion.newInstance
 import fr.epf.min1.velib.maps.PermissionUtils.isPermissionGranted
 import fr.epf.min1.velib.maps.PermissionUtils.requestPermission
 import fr.epf.min1.velib.model.Favorite
@@ -312,19 +311,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         enableMyLocation()
         googleMap.uiSettings.isMyLocationButtonEnabled = false
         locationButton.setOnClickListener {
-            if (map.myLocation != null) {
-                val userLocationLat = map.myLocation.latitude
-                val userLocationLon = map.myLocation.longitude
-                googleMap.moveCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        LatLng(
-                            userLocationLat,
-                            userLocationLon
-                        ), 20F
-                    )
-                )
+            if(permissionDenied) {
+                enableMyLocation()
+                Toast.makeText(this, R.string.no_permission_location, Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, R.string.no_location_found, Toast.LENGTH_SHORT).show()
+                if (map.myLocation != null) {
+                    var userLocationLat = map.myLocation.latitude
+                    var userLocationLon = map.myLocation.longitude
+                    googleMap.moveCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            LatLng(userLocationLat,userLocationLon), 20F)
+                    )
+                } else {
+                    Toast.makeText(this, R.string.no_location_found, Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -418,8 +418,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         } else {
             requestPermission(
                 this, LOCATION_PERMISSION_REQUEST_CODE,
-                Manifest.permission.ACCESS_FINE_LOCATION, true
-            )
+                Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
@@ -439,6 +438,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
             )
         ) {
             enableMyLocation()
+            permissionDenied = false
         } else {
             permissionDenied = true
         }
@@ -447,12 +447,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
     override fun onResumeFragments() {
         super.onResumeFragments()
         if (permissionDenied) {
-            showMissingPermissionError()
-            permissionDenied = false
-        }
-    }
+            //showMissingPermissionError()
 
-    private fun showMissingPermissionError() {
-        newInstance(true).show(supportFragmentManager, "dialog")
+        }
     }
 }
