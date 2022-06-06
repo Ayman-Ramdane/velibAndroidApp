@@ -3,7 +3,8 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.241" />
+        <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable-night/ic_launcher_background.xml" value="0.204" />
+        <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.22" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/animated_bicycles_frame.xml" value="0.2055" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/button_maps_shape.xml" value="0.2885" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_baseline_credit_card.xml" value="0.2885" />
@@ -18,6 +19,7 @@
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_baseline_sync_24.xml" value="0.2885" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_baseline_wrong_location_24.xml" value="0.2055" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_bicycles_frame.xml" value="0.1" />
+        <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_kybjo101.xml" value="0.221" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_launcher_background.xml" value="0.241" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_pedal_bike.xml" value="0.2055" />
         <entry key="..\:/Users/ramda/Documents/EPF/Materiel_Mobile/Projet/Velib/app/src/main/res/drawable/ic_steren_bike_rider_1.xml" value="0.2055" />
