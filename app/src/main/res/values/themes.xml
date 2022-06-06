@@ -32,6 +32,4 @@
         <item name="android:foregroundTint">@color/textSearch</item>
     </style>
 
-<!--    Splash Screen-->
-
 </resources>

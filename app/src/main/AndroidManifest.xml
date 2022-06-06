@@ -41,7 +41,7 @@
             android:configChanges="orientation|screenSize"
             android:exported="true"
             android:label="@string/title_activity_maps"
-            android:theme="@style/splashScreenTheme">
+            android:theme="@style/Theme.App.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
