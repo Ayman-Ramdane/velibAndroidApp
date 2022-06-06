@@ -21,13 +21,11 @@ class DetailsStationActivity : AppCompatActivity() {
         setContentView(R.layout.activity_details_station)
 
         val stationId = intent.getLongExtra("station_id", 0)
-        val stationName = intent.getStringExtra("station_name")
 
-        val listStations = listStations
         val stationDetails = listStations.filter { station -> station.station_id == stationId }[0]
 
         val nameTextView = findViewById<TextView>(R.id.details_stations_name_textview)
-        nameTextView.text = stationName
+        nameTextView.text = stationDetails.name
 
         val numBikes = stationDetails.numBikesAvailable
         val numBikesTextView = findViewById<TextView>(R.id.details_stations_bikes_textview)
@@ -117,7 +115,6 @@ class DetailsStationActivity : AppCompatActivity() {
 
                     item.icon = iconFavorite
                 }
-
 
                 runBlocking {
                     listFavorite = favoriteDao.getAll()

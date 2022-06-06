@@ -76,7 +76,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        setTheme(R.style.Theme_Velib)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -260,7 +260,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         clusterManager.setOnClusterItemClickListener {
             val intent = Intent(this, DetailsStationActivity::class.java)
             intent.putExtra("station_id", it.station_id)
-            intent.putExtra("station_name", it.name)
             startActivity(intent)
             true
         }
