@@ -1,22 +1,28 @@
+@file:Suppress("DEPRECATION")
+
 package fr.epf.min1.velib
 
 import android.Manifest
-import android.content.pm.PackageManager
-import android.util.Log
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
 import androidx.core.content.ContextCompat
-import com.google.android.gms.maps.*
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -28,36 +34,45 @@ import fr.epf.min1.velib.api.VelibStationDetails
 import fr.epf.min1.velib.database.FavoriteDatabase
 import fr.epf.min1.velib.database.StationDatabase
 import fr.epf.min1.velib.databinding.ActivityMapsBinding
-import fr.epf.min1.velib.maps.PermissionUtils.PermissionDeniedDialog.Companion.newInstance
 import fr.epf.min1.velib.maps.PermissionUtils.isPermissionGranted
 import fr.epf.min1.velib.maps.PermissionUtils.requestPermission
 import fr.epf.min1.velib.model.Favorite
 import fr.epf.min1.velib.model.Station
-
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
-private const val TAG = "MapsActivity"
-private lateinit var listStationPositions: List<StationPosition>
-private lateinit var listStationDetails: List<StationDetails>
 lateinit var listStations: List<Station>
 lateinit var listFavorite: List<Favorite>
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissionsResultCallback {
-
+    // Map
+    private lateinit var map: GoogleMap
+    private lateinit var mapFragment: SupportMapFragment
+    private lateinit var clusterManager: ClusterManager<Station>
     private lateinit var binding: ActivityMapsBinding
 
-    //Location User
+    // Location User
     private lateinit var locationButton: FloatingActionButton
+    private lateinit var filterEbike: FloatingActionButton
+    private lateinit var filterMechanical: FloatingActionButton
+    private lateinit var filterDock: FloatingActionButton
+
+    // Permissions
     private var permissionDenied = false
-    private lateinit var map: GoogleMap
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
 
-    //Stations names
+    // Stations
+    private var listStationPositions: List<StationPosition> = listOf()
+    private var listStationDetails: List<StationDetails> = listOf()
     private var listStationsName: MutableList<String> = mutableListOf()
+    private var listStationMarkers: List<Station> = listOf()
+
+    // SearchBar
+    private lateinit var searchBar: AutoCompleteTextView
+    private lateinit var searchAdapter: ArrayAdapter<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,39 +80,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val mapFragment = supportFragmentManager
+        mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
 
         mapFragment.getMapAsync(this)
         mapFragment.getMapAsync { googleMap ->
             map = googleMap
+            clusterManager = ClusterManager<Station>(this, googleMap)
+
             addClusteredMarkers(googleMap)
             googleMap.setOnMapLoadedCallback {
                 val bounds = LatLngBounds.builder()
-                listStations.forEach { bounds.include(LatLng(it.lat, it.lon)) }
+                listStationMarkers.forEach { bounds.include(LatLng(it.lat, it.lon)) }
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
             }
 
-            listStations.forEach { listStationsName.add(it.name) }
-
-            val searchBar = findViewById<AutoCompleteTextView>(R.id.map_search_station)
-            val searchAdapter =
-                ArrayAdapter(this, android.R.layout.simple_list_item_1, listStationsName)
-            searchBar.setAdapter(searchAdapter)
-
-            searchBar.onItemClickListener =
-                AdapterView.OnItemClickListener { parent, _, position, _ ->
-                    val selectedItemText = parent.getItemAtPosition(position)
-                    val station =
-                        listStations.filter { station -> station.name == selectedItemText }[0]
-
-                    val bounds = LatLngBounds.builder()
-                    bounds.include(LatLng(station.lat, station.lon))
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
-                }
         }
 
+        searchBar = findViewById(R.id.map_search_station)
         locationButton = findViewById(R.id.button_location_user)
+        filterEbike = findViewById(R.id.map_filter_ebike)
+        filterMechanical = findViewById(R.id.map_filter_mechanical)
+        filterDock = findViewById(R.id.map_filter_docks)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -114,6 +118,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
             R.id.map_synchro_api_list_action -> {
                 if (checkForInternet(this)) {
                     refreshDataBase()
+                    mapFragment.getMapAsync { googleMap -> refreshMarkers(googleMap) }
                 } else {
                     Toast.makeText(this, getString(R.string.no_internet_access), Toast.LENGTH_SHORT)
                         .show()
@@ -123,8 +128,121 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         return super.onOptionsItemSelected(item)
     }
 
+    override fun onMapReady(googleMap: GoogleMap) {
+
+        map = googleMap
+        enableMyLocation()
+        googleMap.uiSettings.isMyLocationButtonEnabled = false
+        locationButton.setOnClickListener {
+            if (permissionDenied) {
+                enableMyLocation()
+                Toast.makeText(this, R.string.no_permission_location, Toast.LENGTH_SHORT).show()
+            } else {
+                if (map.myLocation != null) {
+                    var userLocationLat = map.myLocation.latitude
+                    var userLocationLon = map.myLocation.longitude
+                    googleMap.moveCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            LatLng(userLocationLat, userLocationLon), 20F
+                        )
+                    )
+                } else {
+                    Toast.makeText(this, R.string.no_location_found, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        if (checkForInternet(this)) {
+            refreshDataBase()
+        } else {
+            refreshListStationFromDataBase()
+        }
+
+        setupSearchBarAdapter()
+        searchBar.onItemClickListener =
+            AdapterView.OnItemClickListener { parent, _, position, _ ->
+                val selectedItemText = parent.getItemAtPosition(position)
+                val station =
+                    listStations.filter { station -> station.name == selectedItemText }[0]
+
+                val bounds = LatLngBounds.builder()
+                bounds.include(LatLng(station.lat, station.lon))
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), 20))
+            }
+
+        val dbFavorite = FavoriteDatabase.createDatabase(this)
+        val favoriteDao = dbFavorite.favoriteDao()
+
+        runBlocking {
+            listFavorite = favoriteDao.getAll()
+        }
+
+        dbFavorite.close()
+
+        filterEbike.setOnClickListener {
+            if (!filterEbike.isExpanded) {
+
+                resetFloatingActionButtons(filterDock, filterMechanical)
+                switchFloatingActionButtons(filterEbike)
+
+                listStationMarkers =
+                    listStationMarkers.filter { it.num_ebikes_available!! > 0 && it.is_renting == 1 }
+
+                refreshMarkers(googleMap)
+            } else {
+                switchFloatingActionButtons(filterEbike)
+                refreshListStationFromDataBase()
+                refreshMarkers(googleMap)
+            }
+        }
+
+        filterMechanical.setOnClickListener {
+            if (!filterMechanical.isExpanded) {
+
+                resetFloatingActionButtons(filterDock, filterEbike)
+                switchFloatingActionButtons(filterMechanical)
+
+                listStationMarkers =
+                    listStationMarkers.filter { it.num_Mechanical_bikes_available!! > 0 && it.is_renting == 1 }
+
+
+                refreshMarkers(googleMap)
+            } else {
+                switchFloatingActionButtons(filterMechanical)
+                refreshListStationFromDataBase()
+                refreshMarkers(googleMap)
+            }
+        }
+
+        filterDock.setOnClickListener {
+            if (!filterDock.isExpanded) {
+
+                resetFloatingActionButtons(filterEbike, filterMechanical)
+                switchFloatingActionButtons(filterDock)
+
+                listStationMarkers =
+                    listStationMarkers.filter { it.numDocksAvailable!! > 0 && it.is_returning == 1 }
+
+                refreshMarkers(googleMap)
+            } else {
+                switchFloatingActionButtons(filterDock)
+                refreshListStationFromDataBase()
+                refreshMarkers(googleMap)
+            }
+        }
+    }
+
+    private fun setupSearchBarAdapter() {
+        listStationsName = mutableListOf()
+        listStationMarkers.forEach { listStationsName.add(it.name) }
+
+        searchAdapter =
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, listStationsName)
+        searchBar.setAdapter(searchAdapter)
+    }
+
+    // Map Functions
     private fun addClusteredMarkers(googleMap: GoogleMap) {
-        val clusterManager = ClusterManager<Station>(this, googleMap)
         clusterManager.renderer =
             StationRenderer(
                 this,
@@ -132,8 +250,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 clusterManager
             )
 
-        Log.d(TAG, "addClusteredMarkers: $listStations")
-        clusterManager.addItems(listStations)
+        clusterManager.addItems(listStationMarkers)
         clusterManager.cluster()
 
         googleMap.setOnCameraIdleListener {
@@ -149,6 +266,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         }
     }
 
+    private fun refreshMarkers(googleMap: GoogleMap) {
+        clusterManager.clearItems()
+        clusterManager.cluster()
+        setupSearchBarAdapter()
+        addClusteredMarkers(googleMap)
+    }
+
+    // Fetch API Data
     private fun synchroApiStationLocalisation() {
         val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
@@ -191,7 +316,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         }
     }
 
-    private fun refreshDataBase(): List<Station> {
+    // Refresh Data
+    private fun refreshDataBase() {
         val dbStation = StationDatabase.createDatabase(this)
         val stationDao = dbStation.stationDao()
 
@@ -228,87 +354,50 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         runBlocking {
             listStations = stationDao.getAll()
         }
+        listStations = listStations.filter { it.is_installed == 1 }
+
+        listStationMarkers = listStations
 
         dbStation.close()
-
-        return listStations
     }
 
-    @SuppressLint("MissingPermission")
-    private fun checkForInternet(context: Context): Boolean {
-
-        val connectivityManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-            val network = connectivityManager.activeNetwork ?: return false
-
-            val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
-
-            return when {
-                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-
-                activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-                else -> false
-            }
-        } else {
-            @Suppress("DEPRECATION") val networkInfo =
-                connectivityManager.activeNetworkInfo ?: return false
-            @Suppress("DEPRECATION")
-            return networkInfo.isConnected
-        }
-    }
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera.
-     */
-    override fun onMapReady(googleMap: GoogleMap) {
-
-        map = googleMap
-        enableMyLocation()
-        googleMap.uiSettings.isMyLocationButtonEnabled = false
-        locationButton.setOnClickListener {
-            if (map.myLocation != null) {
-                var userLocationLat = map.myLocation.latitude
-                var userLocationLon = map.myLocation.longitude
-                googleMap.moveCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        LatLng(
-                            userLocationLat,
-                            userLocationLon
-                        ), 20F
-                    )
-                )
-            } else {
-                Toast.makeText(this, R.string.no_location_found, Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        if (checkForInternet(this)) {
-            refreshDataBase()
-        } else {
-            val dbStation = StationDatabase.createDatabase(this)
-            val stationDao = dbStation.stationDao()
-            runBlocking {
-                listStations = stationDao.getAll()
-            }
-            dbStation.close()
-        }
-
-        val dbFavorite = FavoriteDatabase.createDatabase(this)
-        val favoriteDao = dbFavorite.favoriteDao()
+    private fun refreshListStationFromDataBase() {
+        val dbStation = StationDatabase.createDatabase(this)
+        val stationDao = dbStation.stationDao()
 
         runBlocking {
-
-            listFavorite = favoriteDao.getAll()
+            listStations = stationDao.getAll()
         }
+        listStations = listStations.filter { it.is_installed == 1 }
 
-        dbFavorite.close()
+        listStationMarkers = listStations
+
+        dbStation.close()
     }
 
+    // Floating Action Buttons
+    private fun resetFloatingActionButtons(FAB1: FloatingActionButton, FAB2: FloatingActionButton) {
+        if (FAB1.isExpanded || FAB2.isExpanded) {
+            refreshListStationFromDataBase()
+            FAB1.isExpanded = false
+            FAB1.size = FloatingActionButton.SIZE_NORMAL
+
+            FAB2.isExpanded = false
+            FAB2.size = FloatingActionButton.SIZE_NORMAL
+        }
+    }
+
+    private fun switchFloatingActionButtons(FAB: FloatingActionButton) {
+        if (FAB.isExpanded) {
+            FAB.isExpanded = !FAB.isExpanded
+            FAB.size = FloatingActionButton.SIZE_NORMAL
+        } else {
+            FAB.isExpanded = !FAB.isExpanded
+            FAB.size = FloatingActionButton.SIZE_MINI
+        }
+    }
+
+    // Utils
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
         if (!::map.isInitialized) return
@@ -319,7 +408,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         } else {
             requestPermission(
                 this, LOCATION_PERMISSION_REQUEST_CODE,
-                Manifest.permission.ACCESS_FINE_LOCATION, true
+                Manifest.permission.ACCESS_FINE_LOCATION
             )
         }
     }
@@ -333,27 +422,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
             return
         }
-        if (isPermissionGranted(
+        permissionDenied = if (isPermissionGranted(
                 permissions,
                 grantResults,
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
         ) {
             enableMyLocation()
+            false
         } else {
-            permissionDenied = true
+            true
         }
     }
 
-    override fun onResumeFragments() {
-        super.onResumeFragments()
-        if (permissionDenied) {
-            showMissingPermissionError()
-            permissionDenied = false
-        }
-    }
+    @SuppressLint("MissingPermission")
+    private fun checkForInternet(context: Context): Boolean {
 
-    private fun showMissingPermissionError() {
-        newInstance(true).show(supportFragmentManager, "dialog")
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val network = connectivityManager.activeNetwork ?: return false
+
+        val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return when {
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+
+            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            else -> false
+        }
     }
 }

@@ -4,10 +4,10 @@
     <string name="title_activity_details_station">Détails de la station</string>
     <string name="title_activity_favorite">Liste des favoris</string>
 
-    <string name="ok">OK</string>
+    <string name="no_permission_location">Veuillez autoriser la localisation dans vos paramètres.</string>
     <string name="no_location_found">Veuillez activer la localisation de votre téléphone.</string>
 
-    <string name="favoris">Favoris</string>
+    <string name="favorites">Favoris</string>
     <string name="stations">Stations</string>
     <string name="synchro_api">Synchro Api</string>
 
@@ -21,5 +21,10 @@
     <string name="credit_card_available_string">Pass temporaires : achat possible en station (CB)</string>
     <string name="last_update_data">Mise à jour :</string>
     <string name="no_internet_access">Pas d\'accès internet</string>
+
+    <string name="details_background_image">Image de fond</string>
+    <string name="details_credit_card">carte de crédit</string>
+    <string name="details_mechanical_bike">vélo mécanique</string>
+    <string name="details_ebike">Vélo électrique</string>
 
 </resources>

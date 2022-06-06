@@ -15,7 +15,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:height="25dp"
-
             android:fontFamily="@font/convergence"
             android:textSize="18sp"
             tools:text="Nom de Station" />
