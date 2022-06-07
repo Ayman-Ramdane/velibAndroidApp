@@ -26,12 +26,15 @@ class FavoriteAdapter(private val favoriteStations: List<Station>) :
             val context = it.context
             val intent = Intent(context, DetailsStationActivity::class.java)
             intent.putExtra("station_id", favoriteStation.station_id)
-            intent.putExtra("station_name", favoriteStation.name)
             context.startActivity(intent)
         }
 
-        val clientTextView = holder.view.findViewById<TextView>(R.id.adapter_favorite_text)
-        clientTextView.text = favoriteStation.name
+        val stationNameTextView = holder.view.findViewById<TextView>(R.id.adapter_favorite_title)
+        val stationBikeTextView = holder.view.findViewById<TextView>(R.id.adapter_favorite_bike_number)
+        val stationDockTextView = holder.view.findViewById<TextView>(R.id.adapter_favorite_dock_number)
+        stationNameTextView.text = favoriteStation.name
+        stationBikeTextView.text = favoriteStation.numBikesAvailable.toString()
+        stationDockTextView.text = favoriteStation.numDocksAvailable.toString()
     }
 
     override fun getItemCount() = favoriteStations.size
