@@ -21,7 +21,15 @@ class StationRenderer(
     private val bicycleIcon: BitmapDescriptor by lazy {
         val color = ContextCompat.getColor(
             context,
-            R.color.markerClusterItem
+            when (clusterItemsColor) {
+                0 -> R.color.unfilteredCluster
+                1 -> R.color.eBikeFilterCluster
+                2 -> R.color.mechanicalBikeFilterCluster
+                3 -> R.color.dockFilterCluster
+                else -> {
+                    R.color.unfilteredCluster
+                }
+            }
         )
         BitmapHelper.vectorToBitmap(
             context,
@@ -43,22 +51,28 @@ class StationRenderer(
     private val bicyclesSeveralIcon: BitmapDescriptor by lazy {
         val color = ContextCompat.getColor(
             context,
-            R.color.markerCluster
+            when (clusterItemsColor) {
+                0 -> R.color.unfilteredCluster
+                1 -> R.color.eBikeFilterCluster
+                2 -> R.color.mechanicalBikeFilterCluster
+                3 -> R.color.dockFilterCluster
+                else -> {
+                    R.color.unfilteredCluster
+                }
+            }
         )
         BitmapHelper.vectorToBitmap(
             context,
-            R.drawable.bikes_several_small_60,
+            R.drawable.ic_bikes_several_small_60,
             color
         )
     }
 
     override fun onBeforeClusterRendered(cluster: Cluster<Station>, markerOptions: MarkerOptions) {
         markerOptions.icon(bicyclesSeveralIcon)
-        markerOptions.title(cluster.size.toString())
     }
 
     override fun onClusterRendered(cluster: Cluster<Station>, marker: Marker) {
         marker.setIcon(bicyclesSeveralIcon)
-
     }
 }

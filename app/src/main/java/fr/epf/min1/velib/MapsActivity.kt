@@ -46,6 +46,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 lateinit var listStations: List<Station>
 lateinit var listFavorite: List<Favorite>
+var clusterItemsColor: Int = 0
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissionsResultCallback {
     // Map
@@ -62,7 +63,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
 
     // Permissions
     private var permissionDenied = false
-    private val LOCATION_PERMISSION_REQUEST_CODE = 1
+    private val locationPermissionRequestCode = 1
 
     // Stations
     private var listStationPositions: List<StationPosition> = listOf()
@@ -112,6 +113,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.map_favorite_list_action -> {
+                clusterItemsColor = 0
                 startActivity(Intent(this, ListFavoriteActivity::class.java))
             }
 
@@ -139,8 +141,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 Toast.makeText(this, R.string.no_permission_location, Toast.LENGTH_SHORT).show()
             } else {
                 if (map.myLocation != null) {
-                    var userLocationLat = map.myLocation.latitude
-                    var userLocationLon = map.myLocation.longitude
+                    val userLocationLat = map.myLocation.latitude
+                    val userLocationLon = map.myLocation.longitude
                     googleMap.moveCamera(
                         CameraUpdateFactory.newLatLngZoom(
                             LatLng(userLocationLat, userLocationLon), 20F
@@ -188,11 +190,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 listStationMarkers =
                     listStationMarkers.filter { it.num_ebikes_available!! > 0 && it.is_renting == 1 }
 
+                clusterItemsColor = 1
                 refreshMarkers(googleMap)
             } else {
                 switchFloatingActionButtons(filterEbike)
                 refreshListStationFromDataBase()
+
+                clusterItemsColor = 0
                 refreshMarkers(googleMap)
+
             }
         }
 
@@ -205,11 +211,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 listStationMarkers =
                     listStationMarkers.filter { it.num_Mechanical_bikes_available!! > 0 && it.is_renting == 1 }
 
-
+                clusterItemsColor = 2
                 refreshMarkers(googleMap)
             } else {
                 switchFloatingActionButtons(filterMechanical)
                 refreshListStationFromDataBase()
+
+                clusterItemsColor = 0
                 refreshMarkers(googleMap)
             }
         }
@@ -223,10 +231,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 listStationMarkers =
                     listStationMarkers.filter { it.numDocksAvailable!! > 0 && it.is_returning == 1 }
 
+                clusterItemsColor = 3
                 refreshMarkers(googleMap)
             } else {
                 switchFloatingActionButtons(filterDock)
                 refreshListStationFromDataBase()
+
+                clusterItemsColor = 0
                 refreshMarkers(googleMap)
             }
         }
@@ -406,7 +417,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
             map.isMyLocationEnabled = true
         } else {
             requestPermission(
-                this, LOCATION_PERMISSION_REQUEST_CODE,
+                this, locationPermissionRequestCode,
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
         }
@@ -417,7 +428,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         permissions: Array<String>,
         grantResults: IntArray
     ) {
-        if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
+        if (requestCode != locationPermissionRequestCode) {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
             return
         }
