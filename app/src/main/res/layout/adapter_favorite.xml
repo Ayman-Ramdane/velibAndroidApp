@@ -14,9 +14,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:height="25dp"
+            android:height="30dp"
             android:fontFamily="@font/convergence"
-            android:textSize="18sp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="10dp"
+            android:textSize="19sp"
             tools:text="Nom de Station" />
     </LinearLayout>
 
