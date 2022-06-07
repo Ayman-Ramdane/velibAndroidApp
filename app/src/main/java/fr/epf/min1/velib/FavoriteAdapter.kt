@@ -15,7 +15,7 @@ class FavoriteAdapter(private val favoriteStations: List<Station>) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        val stationView = inflater.inflate(R.layout.adapter_station, parent, false)
+        val stationView = inflater.inflate(R.layout.adapter_favorite, parent, false)
         return FavoriteViewHolder(stationView)
     }
 
@@ -30,7 +30,7 @@ class FavoriteAdapter(private val favoriteStations: List<Station>) :
             context.startActivity(intent)
         }
 
-        val clientTextView = holder.view.findViewById<TextView>(R.id.adapter_station_text)
+        val clientTextView = holder.view.findViewById<TextView>(R.id.adapter_favorite_text)
         clientTextView.text = favoriteStation.name
     }
 
