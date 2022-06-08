@@ -4,7 +4,7 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="unfilteredCluster">#2160FF</color>
-    <color name="eBikeFilterCluster">#F44336</color>
+    <color name="eBikeFilterCluster">#FF8F00</color>
     <color name="mechanicalBikeFilterCluster">#009688</color>
     <color name="dockFilterCluster">#9C27B0</color>
 

@@ -360,15 +360,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 stationDao.insert(it)
             }
         }
-
-        runBlocking {
-            listStations = stationDao.getAll()
-        }
-        listStations = listStations.filter { it.is_installed == 1 }
-
-        listStationMarkers = listStations
-
         dbStation.close()
+
+        refreshListStationFromDataBase()
+
     }
 
     private fun refreshListStationFromDataBase() {
