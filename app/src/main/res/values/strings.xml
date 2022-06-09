@@ -26,5 +26,7 @@
     <string name="details_credit_card">carte de crédit</string>
     <string name="details_mechanical_bike">vélo mécanique</string>
     <string name="details_ebike">Vélo électrique</string>
+    <string name="adapter_favorite_bike_number">Nombre de vélos :</string>
+    <string name="adapter_favorite_dock_number">Nombre de bornes :</string>
 
 </resources>
