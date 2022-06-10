@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import fr.epf.min1.velib.database.FavoriteDatabase
 import fr.epf.min1.velib.model.Favorite
+import fr.epf.min1.velib.model.Station
 import kotlinx.coroutines.runBlocking
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -22,7 +23,22 @@ class DetailsStationActivity : AppCompatActivity() {
 
         val stationId = intent.getLongExtra("station_id", 0)
 
-        val stationDetails = listStations.filter { station -> station.station_id == stationId }[0]
+        val stationDetails = listStations.find { it.station_id == stationId } ?: Station(
+            0,
+            "Station introuvable",
+            0.0,
+            0.0,
+            "0",
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            false,
+            0
+        )
 
         val nameTextView = findViewById<TextView>(R.id.details_stations_name_textview)
         nameTextView.text = stationDetails.name
@@ -48,6 +64,7 @@ class DetailsStationActivity : AppCompatActivity() {
         val creditCardAvailable = stationDetails.credit_card_available
         val creditCardAvailableTextView =
             findViewById<TextView>(R.id.details_stations_credit_card_available)
+
         val creditCardAvailableImageView = findViewById<ImageView>(R.id.credit_card_image)
         creditCardAvailableTextView.isVisible = creditCardAvailable
         creditCardAvailableImageView.isVisible = creditCardAvailable

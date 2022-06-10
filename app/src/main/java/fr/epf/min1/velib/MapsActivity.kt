@@ -46,7 +46,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 lateinit var listStations: List<Station>
 lateinit var listFavorite: List<Favorite>
-var clusterItemsColor: Int = 0
+var clusterItemsColor: ClusterFilter = ClusterFilter.unFiltered
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissionsResultCallback {
     // Map
@@ -113,12 +113,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.map_favorite_list_action -> {
-                clusterItemsColor = 0
                 startActivity(Intent(this, ListFavoriteActivity::class.java))
             }
 
             R.id.map_synchro_api_list_action -> {
                 if (checkForInternet(this)) {
+                    filterEbike = findViewById(R.id.map_filter_ebike)
+                    filterMechanical = findViewById(R.id.map_filter_mechanical)
+                    filterDock = findViewById(R.id.map_filter_docks)
+
+                    resetFloatingActionButtons(filterEbike, filterMechanical)
+                    filterDock.isExpanded = false
+                    filterDock.size = FloatingActionButton.SIZE_NORMAL
+
+                    clusterItemsColor = ClusterFilter.unFiltered
                     refreshDataBase()
                     mapFragment.getMapAsync { googleMap -> refreshMarkers(googleMap) }
                 } else {
@@ -190,13 +198,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 listStationMarkers =
                     listStationMarkers.filter { it.num_ebikes_available!! > 0 && it.is_renting == 1 }
 
-                clusterItemsColor = 1
+                clusterItemsColor = ClusterFilter.eBike
                 refreshMarkers(googleMap)
             } else {
                 switchFloatingActionButtons(filterEbike)
                 refreshListStationFromDataBase()
 
-                clusterItemsColor = 0
+                clusterItemsColor = ClusterFilter.unFiltered
                 refreshMarkers(googleMap)
 
             }
@@ -211,13 +219,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 listStationMarkers =
                     listStationMarkers.filter { it.num_Mechanical_bikes_available!! > 0 && it.is_renting == 1 }
 
-                clusterItemsColor = 2
+                clusterItemsColor = ClusterFilter.mechanical
                 refreshMarkers(googleMap)
             } else {
                 switchFloatingActionButtons(filterMechanical)
                 refreshListStationFromDataBase()
 
-                clusterItemsColor = 0
+                clusterItemsColor = ClusterFilter.unFiltered
                 refreshMarkers(googleMap)
             }
         }
@@ -229,15 +237,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 switchFloatingActionButtons(filterDock)
 
                 listStationMarkers =
-                    listStationMarkers.filter { it.numDocksAvailable!! > 0 && it.is_returning == 1 }
+                    listStationMarkers.filter { it.numDocksAvailable > 0 && it.is_returning == 1 }
 
-                clusterItemsColor = 3
+                clusterItemsColor = ClusterFilter.docks
                 refreshMarkers(googleMap)
             } else {
                 switchFloatingActionButtons(filterDock)
                 refreshListStationFromDataBase()
 
-                clusterItemsColor = 0
+                clusterItemsColor = ClusterFilter.unFiltered
                 refreshMarkers(googleMap)
             }
         }
@@ -350,8 +358,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 it.second.is_returning,
                 it.second.numBikesAvailable,
                 it.second.numDocksAvailable,
-                it.second.num_bikes_available_types?.get(0)?.get("mechanical"),
-                it.second.num_bikes_available_types?.get(1)?.get("ebike"),
+                it.second.num_bikes_available_types[0]["mechanical"],
+                it.second.num_bikes_available_types[1]["ebike"],
                 !it.first.rental_methods.isNullOrEmpty(),
                 it.second.last_reported
             )
@@ -457,4 +465,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
             else -> false
         }
     }
+}
+
+enum class ClusterFilter {
+    unFiltered, eBike, mechanical, docks
 }

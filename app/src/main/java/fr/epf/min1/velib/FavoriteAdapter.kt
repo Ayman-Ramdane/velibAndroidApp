@@ -30,8 +30,10 @@ class FavoriteAdapter(private val favoriteStations: List<Station>) :
         }
 
         val stationNameTextView = holder.view.findViewById<TextView>(R.id.adapter_favorite_title)
-        val stationBikeTextView = holder.view.findViewById<TextView>(R.id.adapter_favorite_bike_number)
-        val stationDockTextView = holder.view.findViewById<TextView>(R.id.adapter_favorite_dock_number)
+        val stationBikeTextView =
+            holder.view.findViewById<TextView>(R.id.adapter_favorite_bike_number)
+        val stationDockTextView =
+            holder.view.findViewById<TextView>(R.id.adapter_favorite_dock_number)
         stationNameTextView.text = favoriteStation.name
         stationBikeTextView.text = favoriteStation.numBikesAvailable.toString()
         stationDockTextView.text = favoriteStation.numDocksAvailable.toString()

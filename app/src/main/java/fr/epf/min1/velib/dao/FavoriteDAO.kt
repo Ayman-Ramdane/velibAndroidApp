@@ -11,9 +11,6 @@ interface FavoriteDAO {
     @Query("SELECT * FROM Favorite")
     suspend fun getAll(): List<Favorite>
 
-    @Query("DELETE FROM Favorite")
-    suspend fun deleteAll()
-
     @Delete
     suspend fun delete(favorite: Favorite)
 

@@ -22,13 +22,10 @@ class StationRenderer(
         val color = ContextCompat.getColor(
             context,
             when (clusterItemsColor) {
-                0 -> R.color.unfilteredCluster
-                1 -> R.color.eBikeFilterCluster
-                2 -> R.color.mechanicalBikeFilterCluster
-                3 -> R.color.dockFilterCluster
-                else -> {
-                    R.color.unfilteredCluster
-                }
+                ClusterFilter.unFiltered -> R.color.unfilteredCluster
+                ClusterFilter.eBike -> R.color.eBikeFilterCluster
+                ClusterFilter.mechanical -> R.color.mechanicalBikeFilterCluster
+                ClusterFilter.docks -> R.color.dockFilterCluster
             }
         )
         BitmapHelper.vectorToBitmap(
@@ -52,13 +49,10 @@ class StationRenderer(
         val color = ContextCompat.getColor(
             context,
             when (clusterItemsColor) {
-                0 -> R.color.unfilteredCluster
-                1 -> R.color.eBikeFilterCluster
-                2 -> R.color.mechanicalBikeFilterCluster
-                3 -> R.color.dockFilterCluster
-                else -> {
-                    R.color.unfilteredCluster
-                }
+                ClusterFilter.unFiltered -> R.color.unfilteredCluster
+                ClusterFilter.eBike -> R.color.eBikeFilterCluster
+                ClusterFilter.mechanical -> R.color.mechanicalBikeFilterCluster
+                ClusterFilter.docks -> R.color.dockFilterCluster
             }
         )
         BitmapHelper.vectorToBitmap(
