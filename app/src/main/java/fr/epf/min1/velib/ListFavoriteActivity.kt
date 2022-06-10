@@ -18,9 +18,9 @@ class ListFavoriteActivity : AppCompatActivity() {
 
         listFavorite.forEach { favorite ->
             val favoriteId = favorite.favorite_station_id
-            listStations.forEach {
-                if (it.station_id == favoriteId) listFavoriteStations.add(it)
-            }
+            val favoriteStation = listStations.find { it.station_id == favoriteId }
+            if (favoriteStation != null) listFavoriteStations.add(favoriteStation)
+
         }
 
         setContentView(R.layout.activity_list_favorite)
